@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #1B1F3B;
+  color: #F5EFE0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid #E8A33D;
+  outline-offset: 2px;
+}
+
+.input-field {
+  width: 100%;
+  background-color: rgba(245, 239, 224, 0.05);
+  border: 1px solid rgba(245, 239, 224, 0.15);
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  color: #F5EFE0;
+  font-family: var(--font-plexmono), monospace;
+  font-size: 0.9rem;
+}
+
+.input-field:focus-visible {
+  outline: 2px solid #E8A33D;
+  outline-offset: 1px;
+  border-color: #E8A33D;
+}
+
+/* subtle indigo-dye texture in the background, evoking adire cloth */
+.adire-bg {
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(232, 163, 61, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 80% 60%, rgba(21, 90, 91, 0.15) 0%, transparent 45%);
+}
