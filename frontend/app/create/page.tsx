@@ -17,7 +17,7 @@ const CYCLE_PRESETS = [
 export default function CreateGroup() {
   const router = useRouter();
   const account = useActiveAccount();
-  const [token, setToken] = useState(DEFAULT_TOKEN_ADDRESS);
+  const [token, setToken] = useState<string>(DEFAULT_TOKEN_ADDRESS);
   const [amount, setAmount] = useState("10");
   const [decimals, setDecimals] = useState("6");
   const [maxMembers, setMaxMembers] = useState("5");
