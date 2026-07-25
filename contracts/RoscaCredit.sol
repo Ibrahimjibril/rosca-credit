@@ -272,17 +272,34 @@ contract RoscaCredit is ReentrancyGuard {
         bool active,
         bool finished,
         uint256 potThisRound,
-        uint256 memberCount,
+        uint256 memberCount
+    ) {
+        Group storage g = groups[groupId];
+        admin = g.admin;
+        token = address(g.token);
+        contributionAmount = g.contributionAmount;
+        maxMembers = g.maxMembers;
+        cycleDuration = g.cycleDuration;
+        roundStartTime = g.roundStartTime;
+        currentRound = g.currentRound;
+        active = g.active;
+        finished = g.finished;
+        potThisRound = g.potThisRound;
+        memberCount = g.members.length;
+    }
+
+    /// @notice Staking-related parameters for a group, split out from
+    ///         `getGroup` to keep each function's stack usage small enough
+    ///         to compile without requiring the IR pipeline.
+    function getGroupStaking(uint256 groupId) external view groupExists(groupId) returns (
         uint16 payoutBps,
         uint16 rewardRateBps,
         uint256 rewardPool
     ) {
         Group storage g = groups[groupId];
-        return (
-            g.admin, address(g.token), g.contributionAmount, g.maxMembers, g.cycleDuration,
-            g.roundStartTime, g.currentRound, g.active, g.finished, g.potThisRound,
-            g.members.length, g.payoutBps, g.rewardRateBps, g.rewardPool
-        );
+        payoutBps = g.payoutBps;
+        rewardRateBps = g.rewardRateBps;
+        rewardPool = g.rewardPool;
     }
 
     function getMembers(uint256 groupId) external view groupExists(groupId) returns (address[] memory) {

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { formatUnits } from "@/lib/units";
-import { useGroup, useTokenDecimals, useTokenSymbol } from "@/lib/hooks";
+import { useGroup, useGroupStaking, useTokenDecimals, useTokenSymbol } from "@/lib/hooks";
 
 export function GroupCard({ groupId }: { groupId: number }) {
   const { data, isLoading } = useGroup(groupId);
+  const { data: staking } = useGroupStaking(groupId);
 
   if (isLoading || !data) {
     return <div className="rounded-xl border border-sand/10 bg-indigo-800/40 p-5 animate-pulse h-32" />;
@@ -23,10 +24,11 @@ export function GroupCard({ groupId }: { groupId: number }) {
     finished,
     ,
     memberCount,
-    payoutBps,
   ] = data as readonly [
-    string, string, bigint, bigint, bigint, bigint, bigint, boolean, boolean, bigint, bigint, number, number, bigint
+    string, string, bigint, bigint, bigint, bigint, bigint, boolean, boolean, bigint, bigint
   ];
+
+  const [payoutBps] = (staking as readonly [number, number, bigint]) ?? [3000, 500, 0n];
 
   const decimals = useTokenDecimals(token as `0x${string}`);
   const symbol = useTokenSymbol(token as `0x${string}`);

@@ -5,19 +5,22 @@ import { formatUnits } from "@/lib/units";
 import { prepareContractCall } from "thirdweb";
 import { useActiveAccount, useSendTransaction, useReadContract } from "thirdweb/react";
 import { RotationWheel } from "@/components/RotationWheel";
-import { roscaContract, tokenContract, useGroup, useMembers, useRoundStatus, useStakeInfo, useTokenDecimals, useTokenSymbol } from "@/lib/hooks";
+import { roscaContract, tokenContract, useGroup, useGroupStaking, useMembers, useRoundStatus, useStakeInfo, useTokenDecimals, useTokenSymbol } from "@/lib/hooks";
 
 export default function GroupDetail({ params }: { params: { id: string } }) {
   const groupId = Number(params.id);
   const account = useActiveAccount();
 
   const { data: groupData, refetch: refetchGroup } = useGroup(groupId);
+  const { data: stakingData, refetch: refetchStaking } = useGroupStaking(groupId);
   const { data: members, refetch: refetchMembers } = useMembers(groupId);
 
   const [
     admin, token, contributionAmount, maxMembers, cycleDuration, roundStartTime,
-    currentRound, active, finished, potThisRound, memberCount, payoutBps, rewardRateBps,
+    currentRound, active, finished, potThisRound, memberCount,
   ] = (groupData as any) || [];
+
+  const [payoutBps, rewardRateBps] = (stakingData as any) || [3000, 500, 0n];
 
   const { data: roundStatus, refetch: refetchRound } = useRoundStatus(groupId, currentRound !== undefined ? Number(currentRound) : 0);
   const { data: stakeInfo, refetch: refetchStake } = useStakeInfo(groupId, account?.address);
@@ -36,7 +39,7 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
   const { mutate: sendTx, isPending } = useSendTransaction();
 
   function refetchAll() {
-    refetchGroup(); refetchMembers(); refetchRound(); refetchAllowance(); refetchStake();
+    refetchGroup(); refetchStaking(); refetchMembers(); refetchRound(); refetchAllowance(); refetchStake();
   }
 
   const isMemberHere = useMemo(

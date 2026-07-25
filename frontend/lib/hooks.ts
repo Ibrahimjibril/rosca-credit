@@ -29,6 +29,14 @@ export function useGroup(groupId: number) {
   });
 }
 
+export function useGroupStaking(groupId: number) {
+  return useReadContract({
+    contract: roscaContract,
+    method: "getGroupStaking",
+    params: [BigInt(groupId)],
+  });
+}
+
 export function useMembers(groupId: number) {
   return useReadContract({
     contract: roscaContract,

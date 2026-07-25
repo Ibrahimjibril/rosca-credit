@@ -75,6 +75,14 @@ export const ROSCA_ABI = [
       { name: "finished", type: "bool" },
       { name: "potThisRound", type: "uint256" },
       { name: "memberCount", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    name: "getGroupStaking",
+    stateMutability: "view",
+    inputs: [{ name: "groupId", type: "uint256" }],
+    outputs: [
       { name: "payoutBps", type: "uint16" },
       { name: "rewardRateBps", type: "uint16" },
       { name: "rewardPool", type: "uint256" },
