@@ -17,6 +17,9 @@ export const ROSCA_ABI = [
       { name: "contributionAmount", type: "uint256" },
       { name: "maxMembers", type: "uint256" },
       { name: "cycleDuration", type: "uint256" },
+      { name: "payoutBps", type: "uint16" },
+      { name: "rewardRateBps", type: "uint16" },
+      { name: "rewardPoolDeposit", type: "uint256" },
     ],
     outputs: [{ name: "groupId", type: "uint256" }],
   },
@@ -36,7 +39,14 @@ export const ROSCA_ABI = [
   },
   {
     type: "function",
-    name: "payout",
+    name: "settleRound",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "groupId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "claimStake",
     stateMutability: "nonpayable",
     inputs: [{ name: "groupId", type: "uint256" }],
     outputs: [],
@@ -65,6 +75,9 @@ export const ROSCA_ABI = [
       { name: "finished", type: "bool" },
       { name: "potThisRound", type: "uint256" },
       { name: "memberCount", type: "uint256" },
+      { name: "payoutBps", type: "uint16" },
+      { name: "rewardRateBps", type: "uint16" },
+      { name: "rewardPool", type: "uint256" },
     ],
   },
   {
@@ -86,6 +99,19 @@ export const ROSCA_ABI = [
   },
   {
     type: "function",
+    name: "getStakeInfo",
+    stateMutability: "view",
+    inputs: [
+      { name: "groupId", type: "uint256" },
+      { name: "member", type: "address" },
+    ],
+    outputs: [
+      { name: "principal", type: "uint256" },
+      { name: "pendingReward", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
     name: "isMember",
     stateMutability: "view",
     inputs: [
@@ -104,6 +130,32 @@ export const ROSCA_ABI = [
       { name: "contributionAmount", type: "uint256", indexed: false },
       { name: "maxMembers", type: "uint256", indexed: false },
       { name: "cycleDuration", type: "uint256", indexed: false },
+      { name: "payoutBps", type: "uint16", indexed: false },
+      { name: "rewardRateBps", type: "uint16", indexed: false },
+      { name: "rewardPoolDeposit", type: "uint256", indexed: false },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "RoundSettled",
+    inputs: [
+      { name: "groupId", type: "uint256", indexed: true },
+      { name: "round", type: "uint256", indexed: true },
+      { name: "recipient", type: "address", indexed: true },
+      { name: "immediatePayout", type: "uint256", indexed: false },
+      { name: "stakedPortion", type: "uint256", indexed: false },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "StakeClaimed",
+    inputs: [
+      { name: "groupId", type: "uint256", indexed: true },
+      { name: "member", type: "address", indexed: true },
+      { name: "principal", type: "uint256", indexed: false },
+      { name: "reward", type: "uint256", indexed: false },
     ],
     anonymous: false,
   },
@@ -128,6 +180,13 @@ export const ERC20_ABI = [
       { name: "owner", type: "address" },
       { name: "spender", type: "address" },
     ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
     outputs: [{ name: "", type: "uint256" }],
   },
   {

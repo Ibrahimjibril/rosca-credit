@@ -24,10 +24,10 @@ export function RotationWheel({
       {/* Center: current recipient callout */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
         <span className="text-[10px] tracking-[0.2em] uppercase text-gold-400/80">
-          {finished ? "Zagaye ya kare" : "Mai karɓa yanzu"}
+          {finished ? "All rounds complete" : "Current recipient"}
         </span>
         <span className="font-display italic text-lg text-sand mt-1">
-          {finished ? "Duk an biya" : `Zagaye ${currentRound + 1}`}
+          {finished ? "Everyone paid" : `Round ${currentRound + 1}`}
         </span>
         <span className="font-mono text-[11px] text-sand/50 mt-1">
           {!finished && members[currentRound]

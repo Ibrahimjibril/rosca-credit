@@ -1,6 +1,6 @@
 {
   "name": "rosca-credit-frontend",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,13 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@rainbow-me/rainbowkit": "^2.1.6",
-    "@tanstack/react-query": "^5.51.1",
     "next": "14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "viem": "^2.18.4",
-    "wagmi": "^2.12.2"
+    "thirdweb": "^5.60.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
