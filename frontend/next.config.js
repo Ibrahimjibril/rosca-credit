@@ -1,16 +1,19 @@
+const webpack = require("webpack");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   webpack: (config) => {
     // thirdweb's wallet bundle transitively references Coinbase's optional
-    // x402 payment-protocol packages, which aren't installed and aren't
-    // needed for Google/email login, MetaMask, or WalletConnect. Tell
-    // webpack to treat them as empty modules instead of failing the build.
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      "@x402/evm": false,
-      "@x402/svm/exact/client": false,
-    };
+    // x402 payment-protocol packages (many sub-paths: @x402/evm, @x402/svm/*,
+    // @x402/core/*, etc.), none of which are installed and none of which are
+    // needed for Google/email login, MetaMask, or WalletConnect. Ignore the
+    // entire @x402/* namespace instead of the build failing on each subpath.
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^@x402\//,
+      })
+    );
     return config;
   },
 };
