@@ -7,6 +7,7 @@ import { useActiveAccount, useProfiles } from "thirdweb/react";
 import { StatCard } from "@/components/StatCard";
 import { GroupCard } from "@/components/GroupCard";
 import { GroupStatsCollector, GroupStat } from "@/components/GroupStatsCollector";
+import { LandingPage } from "@/components/LandingPage";
 import { useGroupCount, useTokenBalance } from "@/lib/hooks";
 import { DEFAULT_TOKEN_ADDRESS } from "@/lib/contract";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -38,6 +39,10 @@ export default function Home() {
   const totalStaked = myGroups.reduce((sum, g) => sum + g.staked, 0n);
   const totalReward = myGroups.reduce((sum, g) => sum + g.pendingReward, 0n);
 
+  if (!account) {
+    return <LandingPage />;
+  }
+
   return (
     <main className="max-w-5xl mx-auto px-5 md:px-8 py-6">
       {/* Hidden collectors: one per group, aggregate stats for this account */}
@@ -48,19 +53,13 @@ export default function Home() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display italic text-2xl text-sand">
-            {account ? `Welcome, ${displayName}` : t("welcomeBack")} 👋
+            Welcome, {displayName} 👋
           </h1>
           <p className="text-sand/50 text-sm mt-1">Here's what's happening with your savings today.</p>
         </div>
       </div>
 
-      {!account ? (
-        <div className="rounded-xl border border-dashed border-sand/15 p-10 text-center text-sand/50">
-          Connect with Google (top right) to see your dashboard.
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard
               icon="$"
               label={t("walletBalance")}
@@ -111,8 +110,6 @@ export default function Home() {
               </p>
             </div>
           </div>
-        </>
-      )}
 
       <div className="mt-8">
         <div className="flex items-center justify-between mb-3">
