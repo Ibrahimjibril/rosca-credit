@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { formatUnits } from "@/lib/units";
 import { prepareContractCall } from "thirdweb";
 import { useActiveAccount, useSendTransaction, useReadContract } from "thirdweb/react";
@@ -10,6 +10,14 @@ import { roscaContract, tokenContract, useGroup, useGroupStaking, useMembers, us
 export default function GroupDetail({ params }: { params: { id: string } }) {
   const groupId = Number(params.id);
   const account = useActiveAccount();
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  function handleShareLink() {
+    const link = typeof window !== "undefined" ? window.location.href : "";
+    navigator.clipboard?.writeText(link);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  }
 
   const { data: groupData, refetch: refetchGroup } = useGroup(groupId);
   const { data: stakingData, refetch: refetchStaking } = useGroupStaking(groupId);
@@ -74,6 +82,15 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
         Admin: {shortAddr(admin)} · {memberCount?.toString()}/{maxMembers?.toString()} members ·{" "}
         {Number(payoutBps) / 100}% instant / {100 - Number(payoutBps) / 100}% staked
       </p>
+
+      {!active && (
+        <button
+          onClick={handleShareLink}
+          className="focus-ring mt-4 w-full sm:w-auto rounded-full border border-gold-500/40 text-gold-400 text-sm font-medium px-5 py-2.5 hover:bg-gold-500/10"
+        >
+          {linkCopied ? "Link copied ✓" : "🔗 Copy invite link to share"}
+        </button>
+      )}
 
       <section className="mt-8 flex justify-center">
         <RotationWheel members={wheelMembers} currentRound={Number(currentRound ?? 0)} finished={!!finished} />

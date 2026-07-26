@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Work_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -30,12 +30,18 @@ export const metadata: Metadata = {
   description: "A rotating savings and credit association (ROSCA) on Arc Testnet.",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${fraunces.variable} ${workSans.variable} ${plexMono.variable}`}>
-      <body className="font-body adire-bg min-h-screen">
+      <body className="font-body adire-bg min-h-screen overflow-x-hidden">
         <Providers>
-          <div className="flex">
+          <div className="flex min-h-screen">
             <Sidebar />
             <div className="flex-1 min-w-0">
               <TopBar />
