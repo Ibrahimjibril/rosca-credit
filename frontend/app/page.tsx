@@ -19,7 +19,7 @@ export default function Home() {
   const { data: walletBalance } = useTokenBalance(DEFAULT_TOKEN_ADDRESS, account?.address);
   const { data: profiles } = useProfiles({ client });
 
-  const googleProfile = profiles?.find((p: any) => p.type === "google");
+  const googleProfile = profiles?.find((p: any) => p.type === "google") as any;
   const displayName =
     googleProfile?.details?.name ||
     googleProfile?.details?.email?.split("@")[0] ||
