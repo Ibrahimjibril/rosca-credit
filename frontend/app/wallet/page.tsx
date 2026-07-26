@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { prepareTransaction } from "thirdweb";
 import { useActiveAccount, useSendTransaction } from "thirdweb/react";
 import { formatUnits, toUnits } from "@/lib/units";
@@ -157,10 +158,12 @@ export default function WalletPage() {
 
           <div className="mt-8">
             <div className="font-mono text-xs uppercase tracking-wide text-sand/40 mb-3">{t("transactionHistory")}</div>
-            <div className="rounded-xl border border-dashed border-sand/15 p-6 text-center text-sand/40 text-sm">
-              On-chain transaction history for your groups appears in each group's page for now —
-              a unified activity feed is coming soon.
-            </div>
+            <Link
+              href="/activity"
+              className="focus-ring block rounded-xl border border-dashed border-sand/15 p-6 text-center text-sand/50 text-sm hover:border-gold-500/40"
+            >
+              View your full activity — contributions, payouts, and stake claims →
+            </Link>
           </div>
         </>
       )}

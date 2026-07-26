@@ -8,7 +8,7 @@ const ITEMS = [
   { key: "home", href: "/", icon: "🏠" },
   { key: "groups", href: "/groups", icon: "👥" },
   { key: "wallet", href: "/wallet", icon: "💳" },
-  { key: "profile", href: "/profile", icon: "👤" },
+  { key: "menu", href: "/settings", icon: "☰" },
 ] as const;
 
 export function MobileNav() {

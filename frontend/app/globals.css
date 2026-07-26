@@ -2,13 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --c-indigo-900: 27 31 59;
+  --c-indigo-800: 36 42 82;
+  --c-gold-400: 240 184 96;
+  --c-gold-500: 232 163 61;
+  --c-gold-600: 201 127 30;
+  --c-teal-800: 15 61 62;
+  --c-teal-700: 21 90 91;
+  --c-sand: 245 239 224;
+}
+
+.light {
+  --c-indigo-900: 250 248 244;
+  --c-indigo-800: 233 229 219;
+  --c-gold-400: 201 127 30;
+  --c-gold-500: 184 110 20;
+  --c-gold-600: 156 92 14;
+  --c-teal-800: 21 90 91;
+  --c-teal-700: 15 61 62;
+  --c-sand: 30 30 40;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  background-color: #1B1F3B;
-  color: #F5EFE0;
+  background-color: rgb(var(--c-indigo-900));
+  color: rgb(var(--c-sand));
+  transition: background-color 0.2s, color 0.2s;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -20,30 +43,30 @@ body {
 }
 
 .focus-ring:focus-visible {
-  outline: 2px solid #E8A33D;
+  outline: 2px solid rgb(var(--c-gold-500));
   outline-offset: 2px;
 }
 
 .input-field {
   width: 100%;
-  background-color: rgba(245, 239, 224, 0.05);
-  border: 1px solid rgba(245, 239, 224, 0.15);
+  background-color: rgb(var(--c-sand) / 0.05);
+  border: 1px solid rgb(var(--c-sand) / 0.15);
   border-radius: 0.5rem;
   padding: 0.65rem 0.9rem;
-  color: #F5EFE0;
+  color: rgb(var(--c-sand));
   font-family: var(--font-plexmono), monospace;
   font-size: 0.9rem;
 }
 
 .input-field:focus-visible {
-  outline: 2px solid #E8A33D;
+  outline: 2px solid rgb(var(--c-gold-500));
   outline-offset: 1px;
-  border-color: #E8A33D;
+  border-color: rgb(var(--c-gold-500));
 }
 
 /* subtle indigo-dye texture in the background, evoking adire cloth */
 .adire-bg {
   background-image:
-    radial-gradient(circle at 20% 20%, rgba(232, 163, 61, 0.06) 0%, transparent 40%),
-    radial-gradient(circle at 80% 60%, rgba(21, 90, 91, 0.15) 0%, transparent 45%);
+    radial-gradient(circle at 20% 20%, rgb(var(--c-gold-500) / 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 80% 60%, rgb(var(--c-teal-700) / 0.15) 0%, transparent 45%);
 }

@@ -38,6 +38,9 @@ export const dictionary = {
   profile: {
     en: "Profile", ar: "الملف الشخصي", fr: "Profil", ha: "Bayanan Kai", yo: "Àkọlé", ig: "Profaịlụ", zh: "个人资料",
   },
+  menu: {
+    en: "Menu", ar: "القائمة", fr: "Menu", ha: "Menu", yo: "Àtòjọ", ig: "Ntujuko", zh: "菜单",
+  },
   settings: {
     en: "Settings", ar: "الإعدادات", fr: "Paramètres", ha: "Saitunan", yo: "Ètò", ig: "Ntọala", zh: "设置",
   },

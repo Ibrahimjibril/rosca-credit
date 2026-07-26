@@ -8,20 +8,20 @@ module.exports = {
     extend: {
       colors: {
         indigo: {
-          950: "#151832",
-          900: "#1B1F3B",
-          800: "#242A52",
+          950: "#151832", // fixed dark, used for text on gold buttons in both themes
+          900: "rgb(var(--c-indigo-900) / <alpha-value>)",
+          800: "rgb(var(--c-indigo-800) / <alpha-value>)",
         },
         gold: {
-          400: "#F0B860",
-          500: "#E8A33D",
-          600: "#C97F1E",
+          400: "rgb(var(--c-gold-400) / <alpha-value>)",
+          500: "rgb(var(--c-gold-500) / <alpha-value>)",
+          600: "rgb(var(--c-gold-600) / <alpha-value>)",
         },
         teal: {
-          800: "#0F3D3E",
-          700: "#155A5B",
+          800: "rgb(var(--c-teal-800) / <alpha-value>)",
+          700: "rgb(var(--c-teal-700) / <alpha-value>)",
         },
-        sand: "#F5EFE0",
+        sand: "rgb(var(--c-sand) / <alpha-value>)",
       },
       fontFamily: {
         display: ["var(--font-fraunces)", "serif"],

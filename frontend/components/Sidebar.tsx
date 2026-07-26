@@ -14,7 +14,6 @@ const NAV_ITEMS = [
   { key: "activity", href: "/activity", icon: "📊" },
   { key: "inviteFriends", href: "/invite", icon: "🎁" },
   { key: "notifications", href: "/notifications", icon: "🔔" },
-  { key: "profile", href: "/profile", icon: "👤" },
 ] as const;
 
 export function Sidebar() {
