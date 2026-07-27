@@ -5,12 +5,13 @@ import { formatUnits } from "@/lib/units";
 import { prepareContractCall } from "thirdweb";
 import { useActiveAccount, useSendTransaction, useReadContract } from "thirdweb/react";
 import { RotationWheel } from "@/components/RotationWheel";
-import { roscaContract, tokenContract, useGroup, useGroupStaking, useMembers, useRoundStatus, useStakeInfo, useTokenDecimals, useTokenSymbol } from "@/lib/hooks";
+import { roscaContract, tokenContract, useGroup, useGroupStaking, useGroupName, useMembers, useRoundStatus, useStakeInfo, useTokenDecimals, useTokenSymbol } from "@/lib/hooks";
 
 export default function GroupDetail({ params }: { params: { id: string } }) {
   const groupId = Number(params.id);
   const account = useActiveAccount();
   const [linkCopied, setLinkCopied] = useState(false);
+  const { data: groupName } = useGroupName(groupId);
 
   function handleShareLink() {
     const link = typeof window !== "undefined" ? window.location.href : "";
@@ -74,7 +75,9 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
 
   return (
     <main className="max-w-2xl mx-auto px-5 md:px-8 py-6">
-      <p className="font-mono text-xs tracking-[0.2em] uppercase text-gold-500">Group #{groupId}</p>
+      <p className="font-mono text-xs tracking-[0.2em] uppercase text-gold-500">
+        {groupName && groupName !== "" ? groupName : `Group #${groupId}`}
+      </p>
       <h1 className="font-display italic text-3xl text-sand mt-2">
         {formatUnits(contributionAmount, dec)} {symbol.data ?? "USDC"} / round
       </h1>

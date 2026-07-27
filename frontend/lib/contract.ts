@@ -13,6 +13,7 @@ export const ROSCA_ABI = [
     name: "createGroup",
     stateMutability: "nonpayable",
     inputs: [
+      { name: "groupName", type: "string" },
       { name: "token", type: "address" },
       { name: "contributionAmount", type: "uint256" },
       { name: "maxMembers", type: "uint256" },
@@ -76,6 +77,13 @@ export const ROSCA_ABI = [
       { name: "potThisRound", type: "uint256" },
       { name: "memberCount", type: "uint256" },
     ],
+  },
+  {
+    type: "function",
+    name: "getGroupName",
+    stateMutability: "view",
+    inputs: [{ name: "groupId", type: "uint256" }],
+    outputs: [{ name: "", type: "string" }],
   },
   {
     type: "function",

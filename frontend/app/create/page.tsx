@@ -4,11 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { prepareContractCall } from "thirdweb";
 import { toUnits } from "@/lib/units";
-import { useActiveAccount, useSendTransaction, useReadContract } from "thirdweb/react";
-import { roscaContract, tokenContract, useGroupCount } from "@/lib/hooks";
+import { useActiveAccount, useSendTransaction } from "thirdweb/react";
+import { roscaContract, useGroupCount } from "@/lib/hooks";
 import { DEFAULT_TOKEN_ADDRESS } from "@/lib/contract";
 
 const USDC_DECIMALS = 6;
+const PAYOUT_BPS = 3000; // fixed: 30% instant, 70% staked
+const REWARD_RATE_BPS = 0; // no reward-pool funding required at creation
 
 const CYCLE_PRESETS = [
   { label: "Daily", seconds: 86400 },
@@ -20,36 +22,15 @@ export default function CreateGroup() {
   const account = useActiveAccount();
   const { data: groupCountBefore } = useGroupCount();
 
+  const [groupName, setGroupName] = useState("");
   const [amount, setAmount] = useState("10");
   const [maxMembers, setMaxMembers] = useState("5");
   const [cycleSeconds, setCycleSeconds] = useState(CYCLE_PRESETS[1].seconds);
-  const [payoutPercent, setPayoutPercent] = useState("30");
-  const [rewardApy, setRewardApy] = useState("5");
-  const [rewardPoolDeposit, setRewardPoolDeposit] = useState("50");
 
   const [createdGroupId, setCreatedGroupId] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const { data: allowance } = useReadContract({
-    contract: tokenContract(DEFAULT_TOKEN_ADDRESS),
-    method: "allowance",
-    params: [account?.address ?? "0x0000000000000000000000000000000000000000", roscaContract.address],
-    queryOptions: { enabled: !!account },
-  });
-
   const { mutate: sendTx, isPending, error } = useSendTransaction();
-
-  const rewardPoolUnits = toUnits(rewardPoolDeposit || "0", USDC_DECIMALS);
-  const needsApproval = !allowance || (allowance as bigint) < rewardPoolUnits;
-
-  function handleApprove() {
-    const tx = prepareContractCall({
-      contract: tokenContract(DEFAULT_TOKEN_ADDRESS),
-      method: "approve",
-      params: [roscaContract.address, rewardPoolUnits],
-    });
-    sendTx(tx as any);
-  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,13 +40,14 @@ export default function CreateGroup() {
       contract: roscaContract,
       method: "createGroup",
       params: [
+        groupName || "Untitled group",
         DEFAULT_TOKEN_ADDRESS,
         toUnits(amount || "0", USDC_DECIMALS),
         BigInt(maxMembers),
         BigInt(cycleSeconds),
-        Math.round(Number(payoutPercent) * 100), // percent -> bps
-        Math.round(Number(rewardApy) * 100), // percent -> bps
-        rewardPoolUnits,
+        PAYOUT_BPS,
+        REWARD_RATE_BPS,
+        0n, // no reward pool deposit needed
       ],
     });
 
@@ -130,6 +112,16 @@ export default function CreateGroup() {
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+        <Field label="Group name">
+          <input
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            placeholder="e.g. Family Circle"
+            maxLength={60}
+            className="input-field"
+          />
+        </Field>
+
         <Field label="How many people can join?">
           <input value={maxMembers} onChange={(e) => setMaxMembers(e.target.value)} type="number" min="2" className="input-field" />
         </Field>
@@ -155,42 +147,22 @@ export default function CreateGroup() {
           </div>
         </Field>
 
-        <div className="rounded-xl border border-gold-500/20 bg-gold-500/5 p-4 space-y-4">
-          <p className="text-xs text-gold-400 font-mono uppercase tracking-wide">Staking safety net</p>
-
-          <Field label="Instant payout % (rest is auto-staked)">
-            <input value={payoutPercent} onChange={(e) => setPayoutPercent(e.target.value)} type="number" min="0" max="100" className="input-field" />
-          </Field>
-          <Field label="Staking reward rate (APY %)">
-            <input value={rewardApy} onChange={(e) => setRewardApy(e.target.value)} type="number" min="0" className="input-field" />
-          </Field>
-          <Field label="Reward pool you'll fund upfront (USDC)">
-            <input value={rewardPoolDeposit} onChange={(e) => setRewardPoolDeposit(e.target.value)} type="number" min="0" step="any" className="input-field" />
-          </Field>
-          <p className="text-[11px] text-sand/50 leading-relaxed">
-            When a member's turn comes, they get {payoutPercent || 0}% right away; the other{" "}
-            {100 - Number(payoutPercent || 0)}% stays staked, earning {rewardApy || 0}% APY, until the
-            group finishes. Missed contributions are auto-deducted from a member's stake.
+        <div className="rounded-xl border border-teal-700/30 bg-teal-800/10 p-4">
+          <p className="text-xs text-teal-700 font-mono uppercase tracking-wide">Built-in staking safety net</p>
+          <p className="text-[11px] text-sand/50 leading-relaxed mt-2">
+            When a member's turn comes, they get 30% of the pot right away. The other 70% stays
+            staked until the group finishes, then can be claimed in full. If a member misses a
+            contribution, it's automatically covered from their own stake — this happens
+            automatically, nothing to configure.
           </p>
         </div>
 
         {!account && <p className="text-teal-700 text-sm">Sign in with Google to continue.</p>}
         {error && <p className="text-red-400 text-xs break-words">{error.message}</p>}
 
-        {needsApproval && Number(rewardPoolDeposit) > 0 && (
-          <button
-            type="button"
-            onClick={handleApprove}
-            disabled={!account || isPending}
-            className="focus-ring w-full rounded-full border border-gold-500 text-gold-400 font-medium px-6 py-3 hover:bg-gold-500/10 disabled:opacity-40"
-          >
-            Approve reward pool deposit
-          </button>
-        )}
-
         <button
           type="submit"
-          disabled={!account || isPending || (needsApproval && Number(rewardPoolDeposit) > 0)}
+          disabled={!account || isPending}
           className="focus-ring w-full rounded-full bg-gold-500 text-indigo-950 font-medium px-6 py-3 hover:bg-gold-400 transition-colors disabled:opacity-40"
         >
           {isPending ? "Creating..." : "Create group"}

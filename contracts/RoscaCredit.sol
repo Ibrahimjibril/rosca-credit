@@ -20,6 +20,7 @@ contract RoscaCredit is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     struct Group {
+        string name;
         address admin;
         IERC20 token;
         uint256 contributionAmount;
@@ -65,6 +66,7 @@ contract RoscaCredit is ReentrancyGuard {
     }
 
     /// @notice Create a new ROSCA group with a staking safety net.
+    /// @param groupName a display name for the group, chosen by the admin
     /// @param token ERC20 token used for contributions and staking (e.g. USDC)
     /// @param contributionAmount amount each member pays every round
     /// @param maxMembers number of members / number of rounds
@@ -74,6 +76,7 @@ contract RoscaCredit is ReentrancyGuard {
     /// @param rewardRateBps annual reward rate paid on staked balances, in basis points
     /// @param rewardPoolDeposit amount of `token` the admin funds upfront to pay staking rewards
     function createGroup(
+        string calldata groupName,
         address token,
         uint256 contributionAmount,
         uint256 maxMembers,
@@ -90,6 +93,7 @@ contract RoscaCredit is ReentrancyGuard {
 
         groupId = groupCount++;
         Group storage g = groups[groupId];
+        g.name = groupName;
         g.admin = msg.sender;
         g.token = IERC20(token);
         g.contributionAmount = contributionAmount;
@@ -300,6 +304,10 @@ contract RoscaCredit is ReentrancyGuard {
         payoutBps = g.payoutBps;
         rewardRateBps = g.rewardRateBps;
         rewardPool = g.rewardPool;
+    }
+
+    function getGroupName(uint256 groupId) external view groupExists(groupId) returns (string memory) {
+        return groups[groupId].name;
     }
 
     function getMembers(uint256 groupId) external view groupExists(groupId) returns (address[] memory) {
