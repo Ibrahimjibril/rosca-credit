@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { formatUnits } from "@/lib/units";
-import { useActiveAccount } from "thirdweb/react";
+import { useActiveAccount, useProfiles } from "thirdweb/react";
 import { StatCard } from "@/components/StatCard";
 import { GroupCard } from "@/components/GroupCard";
 import { GroupStatsCollector, GroupStat } from "@/components/GroupStatsCollector";
@@ -11,14 +11,23 @@ import { LandingPage } from "@/components/LandingPage";
 import { useGroupCount, useTokenBalance } from "@/lib/hooks";
 import { DEFAULT_TOKEN_ADDRESS } from "@/lib/contract";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { client } from "@/lib/thirdwebClient";
+import { getGreeting } from "@/lib/greeting";
 
 export default function Home() {
   const account = useActiveAccount();
   const { t } = useLanguage();
   const { data: groupCount } = useGroupCount();
   const { data: walletBalance } = useTokenBalance(DEFAULT_TOKEN_ADDRESS, account?.address);
+  const { data: profiles } = useProfiles({ client });
 
-  const displayName = account ? `${account.address.slice(0, 6)}…${account.address.slice(-4)}` : "";
+  const googleProfile = profiles?.find((p: any) => p.type === "google") as any;
+  const displayName =
+    googleProfile?.details?.name ||
+    googleProfile?.details?.email?.split("@")[0] ||
+    (account ? `${account.address.slice(0, 6)}…${account.address.slice(-4)}` : "");
+
+  const greeting = getGreeting(displayName || undefined);
 
   const count = groupCount ? Number(groupCount) : 0;
   const allIds = Array.from({ length: count }, (_, i) => count - 1 - i);
@@ -47,7 +56,7 @@ export default function Home() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display italic text-2xl text-sand">
-            Welcome, {displayName} 👋
+            {greeting} 👋
           </h1>
           <p className="text-sand/50 text-sm mt-1">Here's what's happening with your savings today.</p>
         </div>
