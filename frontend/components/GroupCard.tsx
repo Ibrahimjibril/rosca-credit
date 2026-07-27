@@ -4,10 +4,19 @@ import Link from "next/link";
 import { formatUnits } from "@/lib/units";
 import { useGroup, useGroupStaking, useGroupName, useTokenDecimals, useTokenSymbol } from "@/lib/hooks";
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as `0x${string}`;
+
 export function GroupCard({ groupId }: { groupId: number }) {
   const { data, isLoading } = useGroup(groupId);
   const { data: staking } = useGroupStaking(groupId);
   const { data: name } = useGroupName(groupId);
+
+  // Read the token address defensively (data may be undefined while loading),
+  // and call every hook unconditionally — never after an early return —
+  // to avoid a "Rendered more hooks than during the previous render" crash.
+  const token = ((data as any)?.[1] as `0x${string}` | undefined) ?? ZERO_ADDRESS;
+  const decimals = useTokenDecimals(token);
+  const symbol = useTokenSymbol(token);
 
   if (isLoading || !data) {
     return <div className="rounded-xl border border-sand/10 bg-indigo-800/40 p-5 animate-pulse h-32" />;
@@ -15,7 +24,7 @@ export function GroupCard({ groupId }: { groupId: number }) {
 
   const [
     admin,
-    token,
+    ,
     contributionAmount,
     maxMembers,
     ,
@@ -29,10 +38,8 @@ export function GroupCard({ groupId }: { groupId: number }) {
     string, string, bigint, bigint, bigint, bigint, bigint, boolean, boolean, bigint, bigint
   ];
 
-  const [payoutBps] = (staking as readonly [number, number, bigint]) ?? [3000, 500, 0n];
+  const [payoutBps] = (staking as readonly [number, number, bigint]) ?? [3000, 0, 0n];
 
-  const decimals = useTokenDecimals(token as `0x${string}`);
-  const symbol = useTokenSymbol(token as `0x${string}`);
   const dec = decimals.data ?? 6;
   const displayAmount = formatUnits(contributionAmount, dec);
 

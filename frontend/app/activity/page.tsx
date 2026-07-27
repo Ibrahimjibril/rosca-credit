@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useActiveAccount, useContractEvents } from "thirdweb/react";
 import { formatUnits } from "@/lib/units";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -16,6 +16,11 @@ type FeedItem = {
   tone: "gold" | "teal" | "red";
 };
 
+function shortAddr(addr?: string) {
+  if (!addr) return "";
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
+
 export default function ActivityPage() {
   const account = useActiveAccount();
   const { t } = useLanguage();
@@ -25,10 +30,60 @@ export default function ActivityPage() {
   const { data: settled } = useContractEvents({ contract: roscaContract, events: [roundSettledEvent] });
   const { data: claimed } = useContractEvents({ contract: roscaContract, events: [stakeClaimedEvent] });
 
+  // Best-effort: raw wallet-level sends/receives from the block explorer.
+  // Wrapped defensively so a failed/blocked request never breaks the page.
+  const [transfers, setTransfers] = useState<FeedItem[]>([]);
+
+  useEffect(() => {
+    if (!account) {
+      setTransfers([]);
+      return;
+    }
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `https://testnet.arcscan.app/api/v2/addresses/${account.address}/transactions`
+        );
+        if (!res.ok) return;
+        const json = await res.json();
+        const items: FeedItem[] = (json?.items ?? [])
+          .map((tx: any): FeedItem | null => {
+            try {
+              const isSent = tx.from?.hash?.toLowerCase() === account.address.toLowerCase();
+              const valueWei = BigInt(tx.value ?? "0");
+              if (valueWei === 0n) return null; // skip zero-value contract calls to keep the feed readable
+              return {
+                key: `tx-${tx.hash}`,
+                blockNumber: BigInt(tx.block_number ?? 0),
+                icon: isSent ? "↗️" : "↘️",
+                title: isSent
+                  ? `Sent USDC to ${shortAddr(tx.to?.hash)}`
+                  : `Received USDC from ${shortAddr(tx.from?.hash)}`,
+                detail: `${formatUnits(valueWei, 18)} USDC`,
+                tone: isSent ? "red" : "teal",
+              };
+            } catch {
+              return null;
+            }
+          })
+          .filter(Boolean) as FeedItem[];
+        if (!cancelled) setTransfers(items);
+      } catch {
+        // silently ignore — the explorer link below still covers this
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [account]);
+
   const feed = useMemo<FeedItem[]>(() => {
     if (!account) return [];
     const me = account.address.toLowerCase();
-    const items: FeedItem[] = [];
+    const items: FeedItem[] = [...transfers];
 
     (contributed ?? []).forEach((e: any) => {
       if (e.args?.member?.toLowerCase() !== me) return;
@@ -79,7 +134,7 @@ export default function ActivityPage() {
     });
 
     return items.sort((a, b) => (b.blockNumber > a.blockNumber ? 1 : -1));
-  }, [account, contributed, missed, settled, claimed]);
+  }, [account, transfers, contributed, missed, settled, claimed]);
 
   return (
     <main className="max-w-lg mx-auto px-5 md:px-8 py-6">
@@ -91,7 +146,7 @@ export default function ActivityPage() {
         </div>
       ) : feed.length === 0 ? (
         <div className="rounded-xl border border-dashed border-sand/15 p-10 text-center text-sand/50 text-sm">
-          No ROSCA activity yet — contributions, payouts, and stake claims will show up here.
+          No activity yet — sends, receives, contributions, payouts, and stake claims will show up here.
         </div>
       ) : (
         <div className="space-y-3">
@@ -123,7 +178,7 @@ export default function ActivityPage() {
           rel="noopener noreferrer"
           className="focus-ring block text-center mt-6 text-xs text-gold-500 underline font-mono"
         >
-          View full wallet history (sends & receives) on Arcscan →
+          View full wallet history on Arcscan →
         </a>
       )}
     </main>
