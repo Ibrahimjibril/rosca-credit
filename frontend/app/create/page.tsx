@@ -10,7 +10,7 @@ import { DEFAULT_TOKEN_ADDRESS } from "@/lib/contract";
 
 const USDC_DECIMALS = 6;
 const PAYOUT_BPS = 3000; // fixed: 30% instant, 70% staked
-const REWARD_RATE_BPS = 0; // no reward-pool funding required at creation
+const REWARD_RATE_BPS = 500; // 5% APY, funded automatically by a 1% per-round fee — no admin funding needed
 
 const CYCLE_PRESETS = [
   { label: "Daily", seconds: 86400 },
@@ -151,9 +151,10 @@ export default function CreateGroup() {
           <p className="text-xs text-teal-700 font-mono uppercase tracking-wide">Built-in staking safety net</p>
           <p className="text-[11px] text-sand/50 leading-relaxed mt-2">
             When a member's turn comes, they get 30% of the pot right away. The other 70% stays
-            staked until the group finishes, then can be claimed in full. If a member misses a
-            contribution, it's automatically covered from their own stake — this happens
-            automatically, nothing to configure.
+            staked until the group finishes, then can be claimed in full — plus a 5% APY reward,
+            self-funded by a small 1% fee taken from each round's pot (no funding needed from you).
+            If a member misses a contribution, it's automatically covered from their own stake —
+            all of this happens automatically, nothing to configure.
           </p>
         </div>
 

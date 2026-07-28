@@ -1,31 +1,36 @@
 # Rosca_Credit
 
-dApp na ROSCA (ajo/adashi) akan **Arc Testnet**, tare da tsarin staking na
-tsaro. Mambobi na shiga rukuni, kowa yana biyan gudummawa a kowane zagaye.
-Idan lokacin wani mamba ya yi (bisa tsarin shiga, FIFO):
-- Ya karɓi wani kaso na kuɗin nan take (misali 30%, admin ne ke saita shi)
-- Sauran kaso (misali 70%) ana **staking** shi ta atomatik, yana samun riba
-  (APY) har sai adashen ya kammala, sannan zai iya `claimStake` don karɓar
-  ragowar + riba
+An on-chain ROSCA (rotating savings and credit association / Ajo / Adashi)
+dApp on **Arc Testnet**, with a built-in staking safety net.
 
-Idan mamba **bai biya gudummawarsa ba** kafin lokacin zagaye ya kare,
-contract ɗin zai cire adadin da ake bukata daga stake ɗin wannan mamban ta
-atomatik, sannan adashen zai ci gaba.
+Members join a group and contribute every round. When a member's turn
+comes (in join order, FIFO):
+- They receive **30%** of that round's pot instantly
+- The other **70%** is automatically **staked** on their behalf, earning
+  a **5% APY** reward, until the group finishes — then they can
+  `claimStake` to withdraw the remaining stake plus reward
 
-Frontend ɗin yana amfani da **Gmail/email login** (embedded wallet ta
-thirdweb) — babu buƙatar MetaMask, ko da yake har yanzu ana goyon bayan
-MetaMask/WalletConnect ga wanda ke da su tuni. Dashboard yana da yaruka 7:
-English, Arabic, French, Hausa, Yoruba, Igbo, Chinese.
+The reward pool is **self-funding**: a small **1% fee** is skimmed from
+each round's pot automatically, so no admin needs to fund anything upfront.
 
-## Sashen 1 — Turo Smart Contract zuwa Arc Testnet
+If a member **misses their contribution** before a round's deadline, the
+contract automatically deducts the required amount from that member's
+stake, so the group keeps moving without anyone needing to chase them down.
 
-**Abin da kake bukata:**
+The frontend uses **Google/email login** (an embedded wallet via
+thirdweb) — no MetaMask required, though MetaMask/WalletConnect are still
+supported for people who already have a wallet. The dashboard supports 7
+languages: English, Arabic, French, Hausa, Yoruba, Igbo, and Chinese.
+
+## Part 1 — Deploy the Smart Contract to Arc Testnet
+
+**What you'll need:**
 - Node.js (v18+)
-- Wallet (misali MetaMask) da private key ɗinsa
-- USDC na gwaji akan Arc Testnet (don gas + gudummawa + reward pool) — samu
-  daga faucet: https://thirdweb.com/arc-testnet (1 USDC/rana)
+- A wallet (e.g. MetaMask) and its private key
+- Testnet USDC on Arc Testnet (for gas) — get some from the faucet:
+  https://thirdweb.com/arc-testnet (1 USDC/day)
 
-**Matakai:**
+**Steps:**
 
 ```bash
 cd rosca-credit
@@ -33,40 +38,39 @@ npm install
 cp .env.example .env
 ```
 
-Buɗe `.env` sannan ka saka **private key na wallet ɗinka** (ba tare da `0x`
-a gaba ba):
+Open `.env` and set your **wallet's private key** (without a leading `0x`):
 
 ```
 PRIVATE_KEY=abc123...
 ```
 
-⚠️ **Kada ka taɓa raba wannan file ko turawa GitHub.** `.gitignore` ya riga
-ya hana `.env` daga tafiya git, amma ka tabbata.
+⚠️ **Never share this file or push it to GitHub.** `.gitignore` already
+excludes `.env` from git, but double-check.
 
-Sannan a tattara (compile) da kuma turo (deploy):
+Then compile and deploy:
 
 ```bash
 npm run compile
 npm run deploy
 ```
 
-Za a nuna maka adireshin contract ɗin, misali:
+You'll see the contract's address printed, e.g.:
 
 ```
 RoscaCredit deployed to: 0xABCD...
 ```
 
-Ka kwafi wannan adireshin — za a buƙace shi a Sashe na 2. Za ka iya duba
-contract ɗinka akan explorer: `https://testnet.arcscan.app/address/0xABCD...`
+Copy this address — you'll need it in Part 2. You can view your contract
+on the explorer: `https://testnet.arcscan.app/address/0xABCD...`
 
-## Sashen 2 — Gudanar da Frontend a gida
+## Part 2 — Run the Frontend Locally
 
-**Samu thirdweb Client ID (don Gmail login):**
-1. Buɗe thirdweb.com/create-api-key, shiga da Gmail ɗinka
-2. Ƙirƙiri sabon "API Key", ba shi suna (misali `rosca-credit`)
-3. A ƙarƙashin "Allowed Domains", saka `localhost:3000` (don gwaji) da
-   domain na Vercel ɗinka daga baya (misali `rosca-credit.vercel.app`)
-4. Kwafi "Client ID" ɗin da aka bayar
+**Get a thirdweb Client ID (for Google login):**
+1. Go to thirdweb.com/create-api-key and sign in with Google
+2. Create a new "API Key", give it a name (e.g. `rosca-credit`)
+3. Under "Allowed Domains", add `localhost:3000` (for local testing) and
+   your Vercel domain once you have one (e.g. `rosca-credit.vercel.app`)
+4. Copy the generated "Client ID"
 
 ```bash
 cd frontend
@@ -74,37 +78,37 @@ npm install
 cp .env.local.example .env.local
 ```
 
-Buɗe `.env.local` sannan ka cika:
+Open `.env.local` and fill in:
 
 ```
-NEXT_PUBLIC_ROSCA_CONTRACT_ADDRESS=0xABCD...        # adireshin da aka samu a Sashe na 1
-NEXT_PUBLIC_TOKEN_ADDRESS=0x...                      # adireshin USDC na gwaji akan Arc
-NEXT_PUBLIC_THIRDWEB_CLIENT_ID=...                   # Client ID daga thirdweb.com
+NEXT_PUBLIC_ROSCA_CONTRACT_ADDRESS=0xABCD...        # the address from Part 1
+NEXT_PUBLIC_TOKEN_ADDRESS=0x...                      # the test USDC address on Arc
+NEXT_PUBLIC_THIRDWEB_CLIENT_ID=...                   # your Client ID from thirdweb.com
 ```
 
-Sannan ka gudanar:
+Then run:
 
 ```bash
 npm run dev
 ```
 
-Buɗe http://localhost:3000 don gwada dApp ɗin gaba ɗaya kafin deployment.
+Open http://localhost:3000 to try out the whole dApp before deploying it.
 
-## Sashen 3 — Turo Frontend zuwa Vercel
+## Part 3 — Deploy the Frontend to Vercel
 
-**Zaɓi A — Ta Vercel dashboard (mafi sauƙi):**
+**Option A — Via the Vercel dashboard (easiest):**
 
-1. Ka ɗora wannan folder (`frontend/`) zuwa GitHub repo naka.
-2. Je zuwa https://vercel.com → "Add New Project" → zaɓi repo ɗinka.
-3. A "Root Directory", zaɓi `frontend` (idan contracts da frontend suna
-   cikin repo ɗaya).
-4. A ƙarƙashin "Environment Variables", saka su ukun da ke sama
+1. Push this folder (`frontend/`) to your GitHub repo.
+2. Go to https://vercel.com → "Add New Project" → select your repo.
+3. Under "Root Directory", choose `frontend` (since contracts and
+   frontend live in the same repo).
+4. Under "Environment Variables", add the three from above
    (`NEXT_PUBLIC_ROSCA_CONTRACT_ADDRESS`, `NEXT_PUBLIC_TOKEN_ADDRESS`,
    `NEXT_PUBLIC_THIRDWEB_CLIENT_ID`).
-5. Danna "Deploy". Bayan mintuna, za ka samu link (misali
+5. Click "Deploy". After a few minutes you'll get a live link (e.g.
    `rosca-credit.vercel.app`).
 
-**Zaɓi B — Ta Vercel CLI:**
+**Option B — Via the Vercel CLI:**
 
 ```bash
 cd frontend
@@ -113,46 +117,48 @@ vercel login
 vercel --prod
 ```
 
-Yayin turawa, Vercel zai tambaye ka environment variables — saka su uku
-ɗin da aka ambata a sama, ko ka riga ka saita su a
+During deployment, Vercel will ask for environment variables — enter the
+three above, or set them ahead of time at
 `vercel.com/<project>/settings/environment-variables`.
 
-## Yadda dApp ɗin ke aiki (taƙaice)
+## How the dApp works (summary)
 
-1. **Ƙirƙiro rukuni** — admin ya zaɓi token (USDC), adadin gudummawa,
-   yawan mambobi, tsawon zagaye, kason da za a biya nan take (misali 30%),
-   da APY na staking, sannan ya ba da kuɗin reward pool na farko.
-2. **Shiga rukuni** — mambobi na shiga har sai an cika adadin da aka saita.
-   Da zarar an cika, rukuni ya fara (`active`).
-3. **Biya gudummawa** — kowane zagaye, kowane memba dole ya `approve`
-   sannan ya `contribute` da adadin da aka saita.
-4. **Settle Round** — da zarar kowa ya biya (ko lokaci ya wuce), ko wane ne
-   zai iya danna "Settle round & send payout":
-   - Duk wanda bai biya ba, a cire adadin da ake bukata daga stake ɗinsa
-   - Mai karɓan wannan zagaye ya samu kason nan-take (misali 30%)
-   - Sauran (misali 70%) su koma stake ɗinsa, suna samun riba
-5. **Claim Stake** — da zarar an kammala dukkan zagaye, kowane memba zai iya
-   `claimStake` don karɓar ragowar stake ɗinsa + riba da aka tara.
+1. **Create a group** — the admin picks a group name, contribution
+   amount, number of members, and how often a round happens (daily,
+   weekly, or monthly). The 30/70 split and reward mechanism are
+   automatic — nothing else to configure.
+2. **Join a group** — members join until the group is full. Once full,
+   the group becomes `active` and starts automatically. Admins get a
+   shareable invite link; it stops accepting new members once the group
+   fills up.
+3. **Contribute** — each round, every member `approve`s and then
+   `contribute`s their share.
+4. **Settle round** — once everyone has paid (or the round's deadline
+   passes), anyone can click "Settle round & send payout":
+   - Anyone who didn't pay has the amount deducted from their stake
+   - That round's recipient gets 30% instantly
+   - The remaining 70% goes into their stake, earning reward
+5. **Claim stake** — once every round is complete, each member can
+   `claimStake` to withdraw their remaining stake plus accrued reward.
 
-## Sabunta GitHub ɗinka bayan kowane canji
+## Updating GitHub after each change
 
-Idan na sake gyara wani fayil (kamar yadda muka yi tare da staking da
-Turanci), a Termux, je zuwa cikin project ɗinka sannan:
+Whenever a file changes, from Termux, go into your project folder and run:
 
 ```bash
 cd ~/rosca-credit-project/rosca-credit
 git add .
-git commit -m "Bayanin abin da aka canza"
+git commit -m "Describe what changed"
 git push
 ```
 
-Ba sai an sake yin `git init`, `git remote add`, ko `git branch -M main`
-ba — an riga an saita su; kawai `add`, `commit`, `push` a duk lokacin da
-kake da sabbin fayiloli.
+You don't need to run `git init`, `git remote add`, or `git branch -M main`
+again — those are already set up. Just `add`, `commit`, and `push` each
+time you have new changes.
 
-## Bayanan sadarwa (Arc Testnet)
+## Network details (Arc Testnet)
 
-| Bayani | Ƙima |
+| Detail | Value |
 |---|---|
 | Chain ID | 5042002 |
 | RPC | https://5042002.rpc.thirdweb.com |

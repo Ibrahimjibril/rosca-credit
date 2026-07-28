@@ -50,6 +50,7 @@ contract RoscaCredit is ReentrancyGuard {
 
     uint256 public constant BPS_DENOMINATOR = 10000;
     uint256 public constant YEAR = 365 days;
+    uint256 public constant REWARD_FEE_BPS = 100; // 1% of each round's pot self-funds the reward pool
 
     event GroupCreated(uint256 indexed groupId, address indexed admin, address token, uint256 contributionAmount, uint256 maxMembers, uint256 cycleDuration, uint16 payoutBps, uint16 rewardRateBps, uint256 rewardPoolDeposit);
     event MemberJoined(uint256 indexed groupId, address indexed member, uint256 position);
@@ -199,8 +200,15 @@ contract RoscaCredit is ReentrancyGuard {
         uint256 pot = g.potThisRound;
         g.potThisRound = 0;
 
-        uint256 immediatePayout = (pot * g.payoutBps) / BPS_DENOMINATOR;
-        uint256 stakedPortion = pot - immediatePayout;
+        // A small slice of each round's pot self-funds the staking reward pool,
+        // so members earn a reward on their stake without the admin needing to
+        // fund anything upfront.
+        uint256 rewardFee = (pot * REWARD_FEE_BPS) / BPS_DENOMINATOR;
+        g.rewardPool += rewardFee;
+        uint256 distributable = pot - rewardFee;
+
+        uint256 immediatePayout = (distributable * g.payoutBps) / BPS_DENOMINATOR;
+        uint256 stakedPortion = distributable - immediatePayout;
 
         g.currentRound += 1;
         g.roundStartTime = block.timestamp;
