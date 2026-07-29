@@ -11,9 +11,14 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 ///         - When a member's turn comes, they receive `payoutBps` of the pot
 ///           immediately (e.g. 30%), and the rest is auto-staked on their
 ///           behalf, earning `rewardRateBps` APY, until the group finishes.
-///         - If a member misses a round's contribution, the missing amount
-///           is automatically deducted from their staked balance so the
-///           group keeps moving.
+///         - Every round has a timer: `roundStartTime` + `cycleDuration` is
+///           the round's deadline. `getRoundTimer` exposes it for the
+///           frontend to render a countdown.
+///         - If a member misses a round's contribution after the deadline,
+///           the missing amount is automatically deducted from their staked
+///           balance. If their stake isn't enough to cover it, the
+///           remaining shortfall becomes tracked `memberDebt` that they must
+///           repay (via `repayDebt`) before they can `claimStake`.
 ///         - Once the group finishes, every member can claim their
 ///           remaining staked balance plus any accrued reward.
 contract RoscaCredit is ReentrancyGuard {
@@ -48,18 +53,23 @@ contract RoscaCredit is ReentrancyGuard {
     mapping(uint256 => mapping(address => uint256)) public accruedReward;
     mapping(uint256 => mapping(address => uint256)) public lastCheckpoint;
 
+    // Debt ledger: groupId => member => amount still owed after a missed
+    // contribution exceeded their available stake.
+    mapping(uint256 => mapping(address => uint256)) public memberDebt;
+
     uint256 public constant BPS_DENOMINATOR = 10000;
     uint256 public constant YEAR = 365 days;
     uint256 public constant REWARD_FEE_BPS = 100; // 1% of each round's pot self-funds the reward pool
 
     event GroupCreated(uint256 indexed groupId, address indexed admin, address token, uint256 contributionAmount, uint256 maxMembers, uint256 cycleDuration, uint16 payoutBps, uint16 rewardRateBps, uint256 rewardPoolDeposit);
     event MemberJoined(uint256 indexed groupId, address indexed member, uint256 position);
-    event GroupActivated(uint256 indexed groupId, uint256 roundStartTime);
+    event GroupActivated(uint256 indexed groupId, uint256 roundStartTime, uint256 roundDeadline);
     event Contributed(uint256 indexed groupId, uint256 indexed round, address indexed member, uint256 amount);
-    event MissedContribution(uint256 indexed groupId, uint256 indexed round, address indexed member, uint256 deductedFromStake, uint256 shortfall);
-    event RoundSettled(uint256 indexed groupId, uint256 indexed round, address indexed recipient, uint256 immediatePayout, uint256 stakedPortion);
+    event MissedContribution(uint256 indexed groupId, uint256 indexed round, address indexed member, uint256 deductedFromStake, uint256 shortfallToDebt);
+    event RoundSettled(uint256 indexed groupId, uint256 indexed round, address indexed recipient, uint256 immediatePayout, uint256 stakedPortion, uint256 nextRoundDeadline);
     event StakeClaimed(uint256 indexed groupId, address indexed member, uint256 principal, uint256 reward);
     event GroupFinished(uint256 indexed groupId);
+    event DebtRepaid(uint256 indexed groupId, address indexed member, uint256 amount);
 
     modifier groupExists(uint256 groupId) {
         require(groupId < groupCount, "Rosca: group does not exist");
@@ -139,7 +149,7 @@ contract RoscaCredit is ReentrancyGuard {
     function _activate(uint256 groupId, Group storage g) internal {
         g.active = true;
         g.roundStartTime = block.timestamp;
-        emit GroupActivated(groupId, g.roundStartTime);
+        emit GroupActivated(groupId, g.roundStartTime, g.roundStartTime + g.cycleDuration);
     }
 
     /// @notice Pay your contribution for the current round.
@@ -159,10 +169,11 @@ contract RoscaCredit is ReentrancyGuard {
     }
 
     /// @notice Settle the current round: auto-deducts missed contributions
-    ///         from members' staked balances, pays `payoutBps` of the pot to
-    ///         this round's recipient immediately, and stakes the rest on
-    ///         their behalf. Callable by anyone once every member has either
-    ///         contributed or the round deadline has passed.
+    ///         from members' staked balances (recording any shortfall as
+    ///         debt), pays `payoutBps` of the pot to this round's recipient
+    ///         immediately, and stakes the rest on their behalf. Callable by
+    ///         anyone once every member has either contributed or the round
+    ///         deadline has passed.
     function settleRound(uint256 groupId) external nonReentrant groupExists(groupId) {
         Group storage g = groups[groupId];
         require(g.active, "Rosca: group not active yet");
@@ -179,7 +190,7 @@ contract RoscaCredit is ReentrancyGuard {
                     everyoneSettled = false;
                     break;
                 }
-                // Deadline passed and member hasn't paid in — pull from their stake.
+                // Deadline passed and member hasn't paid in â€” pull from their stake.
                 _accrue(groupId, m, g);
                 uint256 available = stakedBalance[groupId][m];
                 uint256 needed = g.contributionAmount;
@@ -188,8 +199,15 @@ contract RoscaCredit is ReentrancyGuard {
                     stakedBalance[groupId][m] -= deducted;
                     g.potThisRound += deducted;
                 }
+                uint256 shortfall = needed - deducted;
+                if (shortfall > 0) {
+                    // Stake wasn't enough (common for members whose payout turn
+                    // hasn't come yet) â€” track it as debt they must clear
+                    // before they can claim their stake later.
+                    memberDebt[groupId][m] += shortfall;
+                }
                 hasContributed[groupId][g.currentRound][m] = true; // mark settled either way
-                emit MissedContribution(groupId, g.currentRound, m, deducted, needed - deducted);
+                emit MissedContribution(groupId, g.currentRound, m, deducted, shortfall);
             }
         }
 
@@ -221,7 +239,7 @@ contract RoscaCredit is ReentrancyGuard {
             stakedBalance[groupId][recipient] += stakedPortion;
         }
 
-        emit RoundSettled(groupId, g.currentRound - 1, recipient, immediatePayout, stakedPortion);
+        emit RoundSettled(groupId, g.currentRound - 1, recipient, immediatePayout, stakedPortion, g.roundStartTime + g.cycleDuration);
 
         if (g.currentRound == g.maxMembers) {
             g.finished = true;
@@ -229,12 +247,30 @@ contract RoscaCredit is ReentrancyGuard {
         }
     }
 
+    /// @notice Repay outstanding debt from a previously-missed contribution
+    ///         that exceeded your staked balance. The repaid amount is added
+    ///         to the group's reward pool, since it makes up for a shortfall
+    ///         the group already absorbed.
+    function repayDebt(uint256 groupId) external nonReentrant groupExists(groupId) {
+        Group storage g = groups[groupId];
+        uint256 owed = memberDebt[groupId][msg.sender];
+        require(owed > 0, "Rosca: no debt owed");
+
+        memberDebt[groupId][msg.sender] = 0;
+        g.token.safeTransferFrom(msg.sender, address(this), owed);
+        g.rewardPool += owed;
+
+        emit DebtRepaid(groupId, msg.sender, owed);
+    }
+
     /// @notice Claim your staked balance plus any accrued reward. Available
-    ///         once the group has finished all its rounds.
+    ///         once the group has finished all its rounds, and only once any
+    ///         outstanding debt has been repaid.
     function claimStake(uint256 groupId) external nonReentrant groupExists(groupId) {
         Group storage g = groups[groupId];
         require(g.finished, "Rosca: group not finished yet");
         require(isMember[groupId][msg.sender], "Rosca: not a member");
+        require(memberDebt[groupId][msg.sender] == 0, "Rosca: repay outstanding debt first");
 
         _accrue(groupId, msg.sender, g);
 
@@ -312,6 +348,30 @@ contract RoscaCredit is ReentrancyGuard {
         payoutBps = g.payoutBps;
         rewardRateBps = g.rewardRateBps;
         rewardPool = g.rewardPool;
+    }
+
+    /// @notice Timer info for the group's current round, meant for the
+    ///         frontend to render a live countdown per group.
+    /// @return roundStartTime when the current round started (unix time)
+    /// @return deadline when the current round's contribution window closes
+    /// @return timeRemaining seconds left until the deadline (0 if passed)
+    /// @return expired whether the deadline has already passed
+    function getRoundTimer(uint256 groupId) external view groupExists(groupId) returns (
+        uint256 roundStartTime,
+        uint256 deadline,
+        uint256 timeRemaining,
+        bool expired
+    ) {
+        Group storage g = groups[groupId];
+        roundStartTime = g.roundStartTime;
+        deadline = g.roundStartTime + g.cycleDuration;
+        if (!g.active || block.timestamp >= deadline) {
+            timeRemaining = 0;
+            expired = g.active;
+        } else {
+            timeRemaining = deadline - block.timestamp;
+            expired = false;
+        }
     }
 
     function getGroupName(uint256 groupId) external view groupExists(groupId) returns (string memory) {
