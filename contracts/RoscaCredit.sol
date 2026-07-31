@@ -16,9 +16,12 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 ///           frontend to render a countdown.
 ///         - If a member misses a round's contribution after the deadline,
 ///           the missing amount is automatically deducted from their staked
-///           balance. If their stake isn't enough to cover it, the
-///           remaining shortfall becomes tracked `memberDebt` that they must
-///           repay (via `repayDebt`) before they can `claimStake`.
+///           balance first. If their stake isn't enough (or is zero), the
+///           contract then tries to pull the remainder directly from their
+///           wallet balance via `transferFrom`, provided they've approved
+///           this contract to spend the token. Only if both sources fall
+///           short does the remainder become tracked `memberDebt`, which
+///           they must repay (via `repayDebt`) before they can `claimStake`.
 ///         - Once the group finishes, every member can claim their
 ///           remaining staked balance plus any accrued reward.
 contract RoscaCredit is ReentrancyGuard {
@@ -54,7 +57,7 @@ contract RoscaCredit is ReentrancyGuard {
     mapping(uint256 => mapping(address => uint256)) public lastCheckpoint;
 
     // Debt ledger: groupId => member => amount still owed after a missed
-    // contribution exceeded their available stake.
+    // contribution exceeded both their stake and their wallet allowance/balance.
     mapping(uint256 => mapping(address => uint256)) public memberDebt;
 
     uint256 public constant BPS_DENOMINATOR = 10000;
@@ -65,7 +68,7 @@ contract RoscaCredit is ReentrancyGuard {
     event MemberJoined(uint256 indexed groupId, address indexed member, uint256 position);
     event GroupActivated(uint256 indexed groupId, uint256 roundStartTime, uint256 roundDeadline);
     event Contributed(uint256 indexed groupId, uint256 indexed round, address indexed member, uint256 amount);
-    event MissedContribution(uint256 indexed groupId, uint256 indexed round, address indexed member, uint256 deductedFromStake, uint256 shortfallToDebt);
+    event MissedContribution(uint256 indexed groupId, uint256 indexed round, address indexed member, uint256 deductedFromStake, uint256 deductedFromWallet, uint256 shortfallToDebt);
     event RoundSettled(uint256 indexed groupId, uint256 indexed round, address indexed recipient, uint256 immediatePayout, uint256 stakedPortion, uint256 nextRoundDeadline);
     event StakeClaimed(uint256 indexed groupId, address indexed member, uint256 principal, uint256 reward);
     event GroupFinished(uint256 indexed groupId);
@@ -169,8 +172,10 @@ contract RoscaCredit is ReentrancyGuard {
     }
 
     /// @notice Settle the current round: auto-deducts missed contributions
-    ///         from members' staked balances (recording any shortfall as
-    ///         debt), pays `payoutBps` of the pot to this round's recipient
+    ///         from members' staked balances first, then falls back to
+    ///         pulling the shortfall straight from their wallet (if they've
+    ///         approved this contract), and only tracks any remainder as
+    ///         debt. Pays `payoutBps` of the pot to this round's recipient
     ///         immediately, and stakes the rest on their behalf. Callable by
     ///         anyone once every member has either contributed or the round
     ///         deadline has passed.
@@ -190,24 +195,47 @@ contract RoscaCredit is ReentrancyGuard {
                     everyoneSettled = false;
                     break;
                 }
-                // Deadline passed and member hasn't paid in â€” pull from their stake.
+                // Deadline passed and member hasn't paid in. Step 1: pull
+                // as much as possible from their staked balance.
                 _accrue(groupId, m, g);
-                uint256 available = stakedBalance[groupId][m];
+                uint256 stakeAvailable = stakedBalance[groupId][m];
                 uint256 needed = g.contributionAmount;
-                uint256 deducted = available < needed ? available : needed;
-                if (deducted > 0) {
-                    stakedBalance[groupId][m] -= deducted;
-                    g.potThisRound += deducted;
+                uint256 deductedFromStake = stakeAvailable < needed ? stakeAvailable : needed;
+                if (deductedFromStake > 0) {
+                    stakedBalance[groupId][m] -= deductedFromStake;
+                    g.potThisRound += deductedFromStake;
                 }
-                uint256 shortfall = needed - deducted;
+                uint256 shortfall = needed - deductedFromStake;
+
+                // Step 2: if the stake wasn't enough (or the member has no
+                // stake yet, e.g. their payout turn hasn't come), try to pull
+                // the remainder directly from their wallet's available
+                // balance via transferFrom. This only succeeds if the member
+                // has approved this contract beforehand; if they haven't, or
+                // their wallet balance is insufficient, the call reverts and
+                // we simply fall through to tracking debt below instead of
+                // failing the whole settlement.
+                uint256 deductedFromWallet = 0;
                 if (shortfall > 0) {
-                    // Stake wasn't enough (common for members whose payout turn
-                    // hasn't come yet) â€” track it as debt they must clear
-                    // before they can claim their stake later.
+                    try g.token.transferFrom(m, address(this), shortfall) returns (bool ok) {
+                        if (ok) {
+                            deductedFromWallet = shortfall;
+                            g.potThisRound += shortfall;
+                            shortfall = 0;
+                        }
+                    } catch {
+                        // No/insufficient allowance or wallet balance —
+                        // falls through to memberDebt below.
+                    }
+                }
+
+                // Step 3: anything still missing becomes tracked debt.
+                if (shortfall > 0) {
                     memberDebt[groupId][m] += shortfall;
                 }
+
                 hasContributed[groupId][g.currentRound][m] = true; // mark settled either way
-                emit MissedContribution(groupId, g.currentRound, m, deducted, shortfall);
+                emit MissedContribution(groupId, g.currentRound, m, deductedFromStake, deductedFromWallet, shortfall);
             }
         }
 
@@ -248,9 +276,9 @@ contract RoscaCredit is ReentrancyGuard {
     }
 
     /// @notice Repay outstanding debt from a previously-missed contribution
-    ///         that exceeded your staked balance. The repaid amount is added
-    ///         to the group's reward pool, since it makes up for a shortfall
-    ///         the group already absorbed.
+    ///         that exceeded your staked balance and wallet allowance. The
+    ///         repaid amount is added to the group's reward pool, since it
+    ///         makes up for a shortfall the group already absorbed.
     function repayDebt(uint256 groupId) external nonReentrant groupExists(groupId) {
         Group storage g = groups[groupId];
         uint256 owed = memberDebt[groupId][msg.sender];
