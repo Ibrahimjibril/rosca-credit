@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { formatUnits } from "@/lib/units";
 import { useGroup, useGroupStaking, useGroupName, useTokenDecimals, useTokenSymbol } from "@/lib/hooks";
+import { CountdownTimer } from "@/components/CountdownTimer";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as `0x${string}`;
 
@@ -27,8 +28,8 @@ export function GroupCard({ groupId }: { groupId: number }) {
     ,
     contributionAmount,
     maxMembers,
-    ,
-    ,
+    cycleDuration,
+    roundStartTime,
     currentRound,
     active,
     finished,
@@ -42,6 +43,7 @@ export function GroupCard({ groupId }: { groupId: number }) {
 
   const dec = decimals.data ?? 6;
   const displayAmount = formatUnits(contributionAmount, dec);
+  const deadline = Number(roundStartTime ?? 0n) + Number(cycleDuration ?? 0n);
 
   const status = finished ? "Completed" : active ? "In progress" : "Waiting for members";
   const statusColor = finished ? "text-sand/50" : active ? "text-gold-400" : "text-teal-700";
@@ -67,6 +69,11 @@ export function GroupCard({ groupId }: { groupId: number }) {
       <div className="mt-2 text-[11px] font-mono text-sand/40">
         {Number(payoutBps) / 100}% instant · {100 - Number(payoutBps) / 100}% staked
       </div>
+      {active && !finished && deadline > 0 && (
+        <div className="mt-2">
+          <CountdownTimer deadlineUnix={deadline} />
+        </div>
+      )}
     </Link>
   );
 }

@@ -124,7 +124,15 @@ export const ROSCA_ABI = [
     outputs: [
       { name: "principal", type: "uint256" },
       { name: "pendingReward", type: "uint256" },
+      { name: "shortfall", type: "uint256" },
     ],
+  },
+  {
+    type: "function",
+    name: "payShortfall",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "groupId", type: "uint256" }],
+    outputs: [],
   },
   {
     type: "function",

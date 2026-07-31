@@ -5,6 +5,7 @@ import { formatUnits } from "@/lib/units";
 import { prepareContractCall } from "thirdweb";
 import { useActiveAccount, useSendTransaction, useReadContract } from "thirdweb/react";
 import { RotationWheel } from "@/components/RotationWheel";
+import { CountdownTimer } from "@/components/CountdownTimer";
 import { roscaContract, tokenContract, useGroup, useGroupStaking, useGroupName, useMembers, useRoundStatus, useStakeInfo, useTokenDecimals, useTokenSymbol } from "@/lib/hooks";
 
 export default function GroupDetail({ params }: { params: { id: string } }) {
@@ -67,7 +68,8 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
   const deadlinePassed = deadline > 0 && Date.now() / 1000 >= deadline;
   const everyoneContributed = roundStatus ? (roundStatus as boolean[]).every(Boolean) : false;
 
-  const [stakedPrincipal, pendingReward] = (stakeInfo as any) ?? [0n, 0n];
+  const [stakedPrincipal, pendingReward, shortfall] = (stakeInfo as any) ?? [0n, 0n, 0n];
+  const needsShortfallApproval = allowance !== undefined && (allowance as bigint) < shortfall;
 
   if (!groupData) {
     return <main className="max-w-2xl mx-auto px-5 md:px-8 py-10 text-sand/50">Loading...</main>;
@@ -111,6 +113,11 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
             {deadlinePassed ? " · Round deadline passed, settlement can be triggered." : ""}
           </StatusBanner>
         )}
+        {active && !finished && deadline > 0 && !deadlinePassed && (
+          <div className="rounded-lg border border-sand/10 bg-indigo-800/40 px-4 py-3">
+            <CountdownTimer deadlineUnix={deadline} label="Time left to contribute this round:" />
+          </div>
+        )}
         {finished && <StatusBanner tone="teal">This group has completed all its rounds. Thank you!</StatusBanner>}
 
         {isMemberHere && (stakedPrincipal > 0n || pendingReward > 0n) && (
@@ -122,6 +129,19 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
             <div className="font-mono text-xs text-sand/50 mt-1">
               + {formatUnits(pendingReward, dec)} {symbol.data ?? "USDC"} reward accrued
             </div>
+          </div>
+        )}
+
+        {isMemberHere && shortfall > 0n && (
+          <div className="rounded-lg border border-red-400/30 bg-red-500/5 p-4">
+            <div className="font-mono text-xs uppercase text-red-300">Outstanding shortfall</div>
+            <div className="font-display text-lg text-sand mt-1">
+              {formatUnits(shortfall, dec)} {symbol.data ?? "USDC"} owed
+            </div>
+            <p className="text-xs text-sand/50 mt-1">
+              A missed contribution wasn't fully covered by your stake. Pay this off to be able to
+              claim your stake once the group finishes.
+            </p>
           </div>
         )}
 
@@ -163,7 +183,25 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
             </ActionButton>
           )}
 
-          {finished && isMemberHere && (stakedPrincipal > 0n || pendingReward > 0n) && (
+          {isMemberHere && shortfall > 0n && needsShortfallApproval && (
+            <ActionButton
+              disabled={isPending}
+              onClick={() => sendTx(prepareContractCall({ contract: tokenContract(token as `0x${string}`), method: "approve", params: [roscaContract.address, shortfall] }) as any, { onSuccess: refetchAll })}
+            >
+              Approve shortfall payment
+            </ActionButton>
+          )}
+
+          {isMemberHere && shortfall > 0n && !needsShortfallApproval && (
+            <ActionButton
+              disabled={isPending}
+              onClick={() => sendTx(prepareContractCall({ contract: roscaContract, method: "payShortfall", params: [BigInt(groupId)] }) as any, { onSuccess: refetchAll })}
+            >
+              Pay off shortfall
+            </ActionButton>
+          )}
+
+          {finished && isMemberHere && shortfall === 0n && (stakedPrincipal > 0n || pendingReward > 0n) && (
             <ActionButton
               disabled={isPending}
               onClick={() => sendTx(prepareContractCall({ contract: roscaContract, method: "claimStake", params: [BigInt(groupId)] }) as any, { onSuccess: refetchAll })}
