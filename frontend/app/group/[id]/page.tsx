@@ -59,6 +59,13 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
 
   const needsApproval = allowance !== undefined && contributionAmount !== undefined && (allowance as bigint) < contributionAmount;
 
+  const myIndex = useMemo(() => {
+    if (!members || !account) return -1;
+    return (members as string[]).findIndex((m) => m.toLowerCase() === account.address.toLowerCase());
+  }, [members, account]);
+
+  const iHaveContributed = myIndex >= 0 && roundStatus ? (roundStatus as boolean[])[myIndex] : false;
+
   const wheelMembers = useMemo(() => {
     if (!members) return [];
     return (members as string[]).map((m, i) => ({ address: m, contributed: roundStatus ? (roundStatus as boolean[])[i] : false }));
@@ -155,7 +162,7 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
             </ActionButton>
           )}
 
-          {active && !finished && isMemberHere && needsApproval && (
+          {active && !finished && isMemberHere && !iHaveContributed && needsApproval && (
             <ActionButton
               disabled={isPending}
               onClick={() => sendTx(prepareContractCall({ contract: tokenContract(token as `0x${string}`), method: "approve", params: [roscaContract.address, contributionAmount] }) as any, { onSuccess: refetchAll })}
@@ -164,13 +171,17 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
             </ActionButton>
           )}
 
-          {active && !finished && isMemberHere && !needsApproval && (
+          {active && !finished && isMemberHere && !iHaveContributed && !needsApproval && (
             <ActionButton
               disabled={isPending}
               onClick={() => sendTx(prepareContractCall({ contract: roscaContract, method: "contribute", params: [BigInt(groupId)] }) as any, { onSuccess: refetchAll })}
             >
               Make contribution
             </ActionButton>
+          )}
+
+          {active && !finished && isMemberHere && iHaveContributed && (
+            <StatusBanner tone="teal">✓ You've contributed this round — waiting for the round to settle.</StatusBanner>
           )}
 
           {active && !finished && (everyoneContributed || deadlinePassed) && (

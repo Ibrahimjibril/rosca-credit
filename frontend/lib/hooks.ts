@@ -17,8 +17,13 @@ export function tokenContract(token: `0x${string}`) {
   return getContract({ client, chain: arcTestnet, address: token, abi: ERC20_ABI as any });
 }
 
+// Every on-chain read below polls periodically so the dashboard and group
+// pages reflect fresh state (e.g. right after a contribution or settleRound)
+// instead of showing stale cached values until a manual page reload.
+const POLL = { refetchInterval: 8000, staleTime: 0 };
+
 export function useGroupCount() {
-  return useReadContract({ contract: roscaContract, method: "groupCount", params: [] });
+  return useReadContract({ contract: roscaContract, method: "groupCount", params: [], queryOptions: POLL });
 }
 
 export function useGroup(groupId: number) {
@@ -26,6 +31,7 @@ export function useGroup(groupId: number) {
     contract: roscaContract,
     method: "getGroup",
     params: [BigInt(groupId)],
+    queryOptions: POLL,
   });
 }
 
@@ -34,6 +40,7 @@ export function useGroupStaking(groupId: number) {
     contract: roscaContract,
     method: "getGroupStaking",
     params: [BigInt(groupId)],
+    queryOptions: POLL,
   });
 }
 
@@ -50,6 +57,7 @@ export function useMembers(groupId: number) {
     contract: roscaContract,
     method: "getMembers",
     params: [BigInt(groupId)],
+    queryOptions: POLL,
   });
 }
 
@@ -58,6 +66,7 @@ export function useRoundStatus(groupId: number, round: number) {
     contract: roscaContract,
     method: "getRoundStatus",
     params: [BigInt(groupId), BigInt(round)],
+    queryOptions: POLL,
   });
 }
 
@@ -66,7 +75,7 @@ export function useStakeInfo(groupId: number, member?: string) {
     contract: roscaContract,
     method: "getStakeInfo",
     params: [BigInt(groupId), (member ?? "0x0000000000000000000000000000000000000000") as `0x${string}`],
-    queryOptions: { enabled: !!member },
+    queryOptions: { enabled: !!member, ...POLL },
   });
 }
 
@@ -93,6 +102,6 @@ export function useTokenBalance(token: `0x${string}`, owner?: string) {
     contract: tokenContract(token),
     method: "balanceOf",
     params: [(owner ?? "0x0000000000000000000000000000000000000000") as `0x${string}`],
-    queryOptions: { enabled: !!owner },
+    queryOptions: { enabled: !!owner, ...POLL },
   });
 }
