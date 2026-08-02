@@ -72,7 +72,7 @@ export default function Home() {
               icon="💰"
               label={t("stakingBalance")}
               value={`${formatUnits(totalStaked, 6)} USDC`}
-              sub="Across all groups"
+            sub={totalStaked > 0n ? "Across all groups" : "Earned after your payout turn"}
               accent="teal"
             />
             <StatCard
