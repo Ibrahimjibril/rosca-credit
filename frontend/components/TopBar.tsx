@@ -12,7 +12,9 @@ export function TopBar() {
       </div>
       <div className="hidden md:block" />
       <div className="flex items-center gap-2 min-w-0 shrink">
-        <LanguageSwitcher />
+        <div className="hidden md:block">
+          <LanguageSwitcher />
+        </div>
         <ConnectWallet />
       </div>
     </div>
