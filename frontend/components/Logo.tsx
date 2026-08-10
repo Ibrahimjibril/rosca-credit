@@ -30,10 +30,10 @@ export function LogoMark({ size = 40 }: { size?: number }) {
 export function LogoLockup() {
   return (
     <div className="flex items-center gap-2">
-      <LogoMark size={30} />
+      <LogoMark size={44} />
       <div className="flex items-baseline gap-1.5">
-        <span className="font-display italic text-lg text-sand leading-none">Rosca</span>
-        <span className="font-mono text-[9px] tracking-[0.15em] text-gold-500 uppercase leading-none">Credit</span>
+        <span className="font-display italic text-2xl text-sand leading-none">Rosca</span>
+        <span className="font-mono text-[11px] tracking-[0.15em] text-gold-500 uppercase leading-none">Credit</span>
       </div>
     </div>
   );
