@@ -56,7 +56,7 @@ export default function WalletPage() {
 
   return (
     <main className="max-w-lg mx-auto px-5 md:px-8 py-6">
-      <h1 className="font-display italic text-2xl text-sand mb-6">{t("wallet")}</h1>
+      <h1 className="font-display font-bold text-2xl text-sand mb-6">{t("wallet")}</h1>
 
       {!account ? (
         <div className="rounded-xl border border-dashed border-sand/15 p-10 text-center text-sand/50">

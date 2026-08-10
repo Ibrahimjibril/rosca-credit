@@ -87,7 +87,7 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
       <p className="font-mono text-xs tracking-[0.2em] uppercase text-gold-500">
         {groupName && groupName !== "" ? groupName : `Group #${groupId}`}
       </p>
-      <h1 className="font-display italic text-3xl text-sand mt-2">
+      <h1 className="font-display font-bold text-3xl text-sand mt-2">
         {formatUnits(contributionAmount, dec)} {symbol.data ?? "USDC"} / round
       </h1>
       <p className="text-sand/50 font-mono text-sm mt-2">

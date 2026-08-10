@@ -14,7 +14,7 @@ export default function GroupsPage() {
   return (
     <main className="max-w-3xl mx-auto px-5 md:px-8 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display italic text-2xl text-sand">{t("groups")}</h1>
+        <h1 className="font-display font-bold text-2xl text-sand">{t("groups")}</h1>
         <Link
           href="/create"
           className="focus-ring rounded-full bg-gold-500 text-indigo-950 font-medium px-4 py-2 text-sm hover:bg-gold-400"

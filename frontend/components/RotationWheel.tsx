@@ -26,7 +26,7 @@ export function RotationWheel({
         <span className="text-[10px] tracking-[0.2em] uppercase text-gold-400/80">
           {finished ? "All rounds complete" : "Current recipient"}
         </span>
-        <span className="font-display italic text-lg text-sand mt-1">
+        <span className="font-display font-bold text-lg text-sand mt-1">
           {finished ? "Everyone paid" : `Round ${currentRound + 1}`}
         </span>
         <span className="font-mono text-[11px] text-sand/50 mt-1">

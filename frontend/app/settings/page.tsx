@@ -14,7 +14,7 @@ export default function SettingsPage() {
 
   return (
     <main className="max-w-lg mx-auto px-5 md:px-8 py-6">
-      <h1 className="font-display italic text-2xl text-sand mb-6">{t("settings")}</h1>
+      <h1 className="font-display font-bold text-2xl text-sand mb-6">{t("settings")}</h1>
 
       <div className="rounded-xl border border-sand/10 bg-indigo-800/40 p-5 mb-4">
         <div className="font-mono text-xs uppercase tracking-wide text-sand/50 mb-3">Appearance</div>

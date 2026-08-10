@@ -17,7 +17,7 @@ export default function Error({
     <main className="min-h-screen flex items-center justify-center px-6 text-center bg-indigo-900">
       <div className="max-w-sm">
         <div className="text-3xl mb-3">⚠️</div>
-        <h1 className="font-display italic text-2xl text-sand">Something went wrong</h1>
+        <h1 className="font-display font-bold text-2xl text-sand">Something went wrong</h1>
         <p className="text-sand/60 text-sm mt-2">
           An unexpected error occurred. Try again, or head back to the dashboard.
         </p>

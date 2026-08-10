@@ -75,7 +75,7 @@ export default function CreateGroup() {
       <main className="max-w-lg mx-auto px-5 md:px-8 py-6">
         <div className="rounded-xl border border-gold-500/30 bg-gold-500/5 p-6 text-center">
           <div className="text-3xl mb-3">🎉</div>
-          <h1 className="font-display italic text-2xl text-sand">Group created!</h1>
+          <h1 className="font-display font-bold text-2xl text-sand">Group created!</h1>
           <p className="text-sand/60 text-sm mt-2">
             Share this link with the people you want in your group. Once it's full, the link stops
             letting new people join — the group starts automatically.
@@ -105,7 +105,7 @@ export default function CreateGroup() {
   return (
     <main className="max-w-lg mx-auto px-5 md:px-8 py-6">
       <p className="font-mono text-xs tracking-[0.2em] uppercase text-gold-500">New group</p>
-      <h1 className="font-display italic text-3xl text-sand mt-2">Create a Rosca_Credit group</h1>
+      <h1 className="font-display font-bold text-3xl text-sand mt-2">Create a Rosca_Credit group</h1>
       <p className="text-sand/60 mt-3 text-sm">
         You'll become the admin and the first member — you'll receive the payout in the first round.
         You'll get a shareable link to invite people once it's created.

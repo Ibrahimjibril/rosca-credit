@@ -10,7 +10,7 @@ export default function InvitePage() {
 
   return (
     <main className="max-w-lg mx-auto px-5 md:px-8 py-6">
-      <h1 className="font-display italic text-2xl text-sand mb-6">{t("inviteFriends")}</h1>
+      <h1 className="font-display font-bold text-2xl text-sand mb-6">{t("inviteFriends")}</h1>
       <p className="text-sand/60 text-sm mb-6">
         Share Rosca_Credit with friends and family — the more trusted members in a group,
         the smoother the rotation.

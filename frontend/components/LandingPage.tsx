@@ -36,14 +36,14 @@ export function LandingPage() {
           <div className="flex items-center gap-3">
             <LogoMark size={44} />
             <div>
-              <div className="font-display italic text-2xl text-sand leading-none">Rosca-Credit</div>
+              <div className="font-display font-bold text-2xl text-sand leading-none">Rosca-Credit</div>
               <div className="font-mono text-[10px] tracking-[0.2em] text-gold-500 uppercase mt-1">
                 On-chain rotating savings
               </div>
             </div>
           </div>
 
-          <h1 className="font-display italic text-4xl md:text-5xl text-sand mt-8 leading-tight">
+          <h1 className="font-display font-bold text-4xl md:text-5xl text-sand mt-8 leading-tight">
             Collect. Save. Grow. <span className="text-gold-500">Together.</span>
           </h1>
 

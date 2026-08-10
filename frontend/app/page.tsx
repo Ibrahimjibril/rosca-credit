@@ -55,7 +55,7 @@ export default function Home() {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display italic text-2xl text-sand">
+          <h1 className="font-display font-bold text-2xl text-sand">
             {greeting} 👋
           </h1>
           <p className="text-sand/50 text-sm mt-1">Here's what's happening with your savings today.</p>
