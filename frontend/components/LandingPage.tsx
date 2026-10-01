@@ -23,7 +23,7 @@ const FEATURES = [
 
 const PANEL_POINTS = [
   { icon: "🔒", title: "Secure & Non-Custodial", desc: "Your funds are locked in smart contracts, not held by us." },
-  { icon: "💳", title: "Automatic Wallet", desc: "A wallet is created for you on Arc Testnet – no setup needed." },
+  { icon: "💳", title: "Automatic Wallet", desc: "A wallet is created for you on Arc – no setup needed." },
   { icon: "🔑", title: "No Private Keys", desc: "We abstract the complexity away. You just sign in and go." },
 ];
 

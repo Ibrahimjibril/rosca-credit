@@ -3,18 +3,18 @@
 import { getContract } from "thirdweb";
 import { useReadContract } from "thirdweb/react";
 import { client } from "@/lib/thirdwebClient";
-import { arcTestnet } from "@/lib/chain";
+import { arcMainnet } from "@/lib/chain";
 import { ROSCA_ABI, ROSCA_CONTRACT_ADDRESS, ERC20_ABI } from "@/lib/contract";
 
 export const roscaContract = getContract({
   client,
-  chain: arcTestnet,
+  chain: arcMainnet,
   address: ROSCA_CONTRACT_ADDRESS,
   abi: ROSCA_ABI as any,
 });
 
 export function tokenContract(token: `0x${string}`) {
-  return getContract({ client, chain: arcTestnet, address: token, abi: ERC20_ABI as any });
+  return getContract({ client, chain: arcMainnet, address: token, abi: ERC20_ABI as any });
 }
 
 // Every on-chain read below polls periodically so the dashboard and group

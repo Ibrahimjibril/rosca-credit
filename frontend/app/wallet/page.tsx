@@ -9,7 +9,7 @@ import { useTokenBalance, useTokenSymbol } from "@/lib/hooks";
 import { DEFAULT_TOKEN_ADDRESS } from "@/lib/contract";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { client } from "@/lib/thirdwebClient";
-import { arcTestnet } from "@/lib/chain";
+import { arcMainnet } from "@/lib/chain";
 
 type Panel = "none" | "deposit" | "withdraw";
 
@@ -39,7 +39,7 @@ export default function WalletPage() {
 
     const tx = prepareTransaction({
       to: recipient as `0x${string}`,
-      chain: arcTestnet,
+      chain: arcMainnet,
       client,
       value: toUnits(amount, 18), // native USDC uses 18 decimals on Arc
     });
@@ -95,7 +95,7 @@ export default function WalletPage() {
                 Receive USDC
               </div>
               <p className="text-sand/60 text-sm mb-3">
-                Send USDC (Arc Testnet) to this address, or claim free testnet USDC from the faucet.
+                Send USDC on Arc to this address to fund your wallet.
               </p>
               <div className="rounded-lg bg-indigo-950/60 border border-sand/10 p-3 font-mono text-xs text-sand break-all">
                 {account.address}
@@ -103,18 +103,10 @@ export default function WalletPage() {
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={handleCopy}
-                  className="focus-ring flex-1 rounded-full bg-gold-500 text-indigo-950 font-medium py-2.5 text-sm hover:bg-gold-400"
+                  className="focus-ring w-full rounded-full bg-gold-500 text-indigo-950 font-medium py-2.5 text-sm hover:bg-gold-400"
                 >
                   {copied ? "Copied ✓" : "Copy address"}
                 </button>
-                <a
-                  href="https://thirdweb.com/arc-testnet"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="focus-ring flex-1 text-center rounded-full border border-sand/20 text-sand py-2.5 text-sm hover:border-gold-500/40"
-                >
-                  Open faucet
-                </a>
               </div>
             </div>
           )}

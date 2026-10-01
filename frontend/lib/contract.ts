@@ -2,7 +2,7 @@
 export const ROSCA_CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_ROSCA_CONTRACT_ADDRESS ||
   "0x0000000000000000000000000000000000000000") as `0x${string}`;
 
-// Default USDC test token on Arc Testnet — replace if you use a different
+// Default USDC token on Arc Mainnet — replace if you use a different
 // ERC20 for contributions. Members must approve() this token before contributing.
 export const DEFAULT_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_TOKEN_ADDRESS ||
   "0x0000000000000000000000000000000000000000") as `0x${string}`;

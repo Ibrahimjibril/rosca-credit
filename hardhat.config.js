@@ -16,5 +16,10 @@ module.exports = {
       chainId: 5042002,
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
+    arcMainnet: {
+      url: "https://rpc.mainnet.arc.io",
+      chainId: 5042,
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+    },
   },
 };

@@ -73,7 +73,7 @@ export function Sidebar() {
         <div className="mt-3 rounded-lg border border-sand/10 px-3 py-2 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-gold-500" />
           <div className="text-[11px] font-mono">
-            <div className="text-sand/60">Arc Testnet</div>
+            <div className="text-sand/60">Arc</div>
             <div className="text-sand/40">
               {account ? `${account.address.slice(0, 6)}…${account.address.slice(-4)}` : "Not connected"}
             </div>

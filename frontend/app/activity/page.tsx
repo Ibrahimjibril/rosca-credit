@@ -44,7 +44,7 @@ export default function ActivityPage() {
     (async () => {
       try {
         const res = await fetch(
-          `https://testnet.arcscan.app/api/v2/addresses/${account.address}/transactions`
+          `https://explorer.arc.io/api/v2/addresses/${account.address}/transactions`
         );
         if (!res.ok) return;
         const json = await res.json();
@@ -173,12 +173,12 @@ export default function ActivityPage() {
 
       {account && (
         <a
-          href={`https://testnet.arcscan.app/address/${account.address}`}
+          href={`https://explorer.arc.io/address/${account.address}`}
           target="_blank"
           rel="noopener noreferrer"
           className="focus-ring block text-center mt-6 text-xs text-gold-500 underline font-mono"
         >
-          View full wallet history on Arcscan →
+          View full wallet history on Arc Explorer →
         </a>
       )}
     </main>
