@@ -1,0 +1,3 @@
+# Private key of the wallet you'll use to deploy the contract.
+# NEVER commit your real .env file or share this key with anyone.
+PRIVATE_KEY=0x3cc3da08af4917cef9f28648dab08af9d41a4a583527cbce553464e37b3edd98
