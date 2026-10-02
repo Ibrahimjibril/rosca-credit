@@ -5,12 +5,12 @@ import Link from "next/link";
 import { prepareContractCall } from "thirdweb";
 import { toUnits } from "@/lib/units";
 import { useActiveAccount, useSendTransaction } from "thirdweb/react";
-import { roscaContract, useGroupCount } from "@/lib/hooks";
-import { DEFAULT_TOKEN_ADDRESS } from "@/lib/contract";
+import { useGroupCount, useRoscaContract } from "@/lib/hooks";
+import { useNetwork } from "@/contexts/NetworkContext";
 
 const USDC_DECIMALS = 6;
-const PAYOUT_BPS = 3000; // fixed: 30% instant, 70% staked
-const REWARD_RATE_BPS = 500; // 5% APY, funded automatically by a 1% per-round fee — no admin funding needed
+const PAYOUT_BPS = 3000;
+const REWARD_RATE_BPS = 500;
 
 const CYCLE_PRESETS = [
   { label: "Daily", seconds: 86400 },
@@ -20,6 +20,8 @@ const CYCLE_PRESETS = [
 
 export default function CreateGroup() {
   const account = useActiveAccount();
+  const roscaContract = useRoscaContract();
+  const { tokenAddress } = useNetwork();
   const { data: groupCountBefore } = useGroupCount();
 
   const [groupName, setGroupName] = useState("");
@@ -41,13 +43,13 @@ export default function CreateGroup() {
       method: "createGroup",
       params: [
         groupName || "Untitled group",
-        DEFAULT_TOKEN_ADDRESS,
+        tokenAddress,
         toUnits(amount || "0", USDC_DECIMALS),
         BigInt(maxMembers),
         BigInt(cycleSeconds),
         PAYOUT_BPS,
         REWARD_RATE_BPS,
-        0n, // no reward pool deposit needed
+        0n,
       ],
     });
 

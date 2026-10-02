@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useActiveAccount, useContractEvents } from "thirdweb/react";
 import { formatUnits } from "@/lib/units";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { roscaContract } from "@/lib/hooks";
+import { useRoscaContract } from "@/lib/hooks";
+import { useNetwork } from "@/contexts/NetworkContext";
 import { contributedEvent, missedContributionEvent, roundSettledEvent, stakeClaimedEvent } from "@/lib/events";
 
 type FeedItem = {
@@ -24,14 +25,14 @@ function shortAddr(addr?: string) {
 export default function ActivityPage() {
   const account = useActiveAccount();
   const { t } = useLanguage();
+  const roscaContract = useRoscaContract();
+  const { explorerUrl } = useNetwork();
 
   const { data: contributed } = useContractEvents({ contract: roscaContract, events: [contributedEvent] });
   const { data: missed } = useContractEvents({ contract: roscaContract, events: [missedContributionEvent] });
   const { data: settled } = useContractEvents({ contract: roscaContract, events: [roundSettledEvent] });
   const { data: claimed } = useContractEvents({ contract: roscaContract, events: [stakeClaimedEvent] });
 
-  // Best-effort: raw wallet-level sends/receives from the block explorer.
-  // Wrapped defensively so a failed/blocked request never breaks the page.
   const [transfers, setTransfers] = useState<FeedItem[]>([]);
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export default function ActivityPage() {
     (async () => {
       try {
         const res = await fetch(
-          `https://explorer.arc.io/api/v2/addresses/${account.address}/transactions`
+          `${explorerUrl}/api/v2/addresses/${account.address}/transactions`
         );
         if (!res.ok) return;
         const json = await res.json();
@@ -53,7 +54,7 @@ export default function ActivityPage() {
             try {
               const isSent = tx.from?.hash?.toLowerCase() === account.address.toLowerCase();
               const valueWei = BigInt(tx.value ?? "0");
-              if (valueWei === 0n) return null; // skip zero-value contract calls to keep the feed readable
+              if (valueWei === 0n) return null;
               return {
                 key: `tx-${tx.hash}`,
                 blockNumber: BigInt(tx.block_number ?? 0),
@@ -78,7 +79,7 @@ export default function ActivityPage() {
     return () => {
       cancelled = true;
     };
-  }, [account]);
+  }, [account, explorerUrl]);
 
   const feed = useMemo<FeedItem[]>(() => {
     if (!account) return [];
@@ -173,7 +174,7 @@ export default function ActivityPage() {
 
       {account && (
         <a
-          href={`https://explorer.arc.io/address/${account.address}`}
+          href={`${explorerUrl}/address/${account.address}`}
           target="_blank"
           rel="noopener noreferrer"
           className="focus-ring block text-center mt-6 text-xs text-gold-500 underline font-mono"

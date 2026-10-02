@@ -3,11 +3,8 @@
 import { ConnectButton, darkTheme } from "thirdweb/react";
 import { inAppWallet, createWallet } from "thirdweb/wallets";
 import { client } from "@/lib/thirdwebClient";
-import { arcMainnet } from "@/lib/chain";
+import { useNetwork } from "@/contexts/NetworkContext";
 
-// Google/email login creates a non-custodial embedded wallet automatically —
-// no MetaMask required. We also allow MetaMask/WalletConnect as a fallback
-// for people who already have a crypto wallet.
 const wallets = [
   inAppWallet({
     auth: {
@@ -31,11 +28,13 @@ const roscaTheme = darkTheme({
 });
 
 export function ConnectWallet() {
+  const { chain } = useNetwork();
+
   return (
     <ConnectButton
       client={client}
       wallets={wallets}
-      chain={arcMainnet}
+      chain={chain}
       theme={roscaTheme}
       connectModal={{ size: "compact", title: "Sign in to Rosca_Credit" }}
       connectButton={{ label: "Continue with Google" }}

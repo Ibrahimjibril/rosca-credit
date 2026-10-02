@@ -6,11 +6,12 @@ import { prepareContractCall } from "thirdweb";
 import { useActiveAccount, useSendTransaction, useReadContract } from "thirdweb/react";
 import { RotationWheel } from "@/components/RotationWheel";
 import { CountdownTimer } from "@/components/CountdownTimer";
-import { roscaContract, tokenContract, useGroup, useGroupStaking, useGroupName, useMembers, useRoundStatus, useStakeInfo, useTokenDecimals, useTokenSymbol } from "@/lib/hooks";
+import { useRoscaContract, useTokenContract, useGroup, useGroupStaking, useGroupName, useMembers, useRoundStatus, useStakeInfo, useTokenDecimals, useTokenSymbol } from "@/lib/hooks";
 
 export default function GroupDetail({ params }: { params: { id: string } }) {
   const groupId = Number(params.id);
   const account = useActiveAccount();
+  const roscaContract = useRoscaContract();
   const [linkCopied, setLinkCopied] = useState(false);
   const { data: groupName } = useGroupName(groupId);
 
@@ -38,9 +39,10 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
   const decimals = useTokenDecimals(token as `0x${string}`);
   const symbol = useTokenSymbol(token as `0x${string}`);
   const dec = decimals.data ?? 6;
+  const tokenContractInstance = useTokenContract((token ?? "0x0000000000000000000000000000000000000000") as `0x${string}`);
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
-    contract: tokenContract(token as `0x${string}`),
+    contract: tokenContractInstance,
     method: "allowance",
     params: [account?.address ?? "0x0000000000000000000000000000000000000000", roscaContract.address],
     queryOptions: { enabled: !!account && !!token },
@@ -165,7 +167,7 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
           {active && !finished && isMemberHere && !iHaveContributed && needsApproval && (
             <ActionButton
               disabled={isPending}
-              onClick={() => sendTx(prepareContractCall({ contract: tokenContract(token as `0x${string}`), method: "approve", params: [roscaContract.address, contributionAmount] }) as any, { onSuccess: refetchAll })}
+              onClick={() => sendTx(prepareContractCall({ contract: tokenContractInstance, method: "approve", params: [roscaContract.address, contributionAmount] }) as any, { onSuccess: refetchAll })}
             >
               Approve token spending
             </ActionButton>
@@ -197,7 +199,7 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
           {isMemberHere && shortfall > 0n && needsShortfallApproval && (
             <ActionButton
               disabled={isPending}
-              onClick={() => sendTx(prepareContractCall({ contract: tokenContract(token as `0x${string}`), method: "approve", params: [roscaContract.address, shortfall] }) as any, { onSuccess: refetchAll })}
+              onClick={() => sendTx(prepareContractCall({ contract: tokenContractInstance, method: "approve", params: [roscaContract.address, shortfall] }) as any, { onSuccess: refetchAll })}
             >
               Approve shortfall payment
             </ActionButton>

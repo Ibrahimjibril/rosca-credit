@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LogoLockup } from "@/components/Logo";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useActiveAccount, useDisconnect, useActiveWallet } from "thirdweb/react";
+import { NetworkSwitcher } from "@/components/NetworkSwitcher";
 
 const NAV_ITEMS = [
   { key: "home", href: "/", icon: "🏠" },
@@ -49,7 +50,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="space-y-1 pt-4 border-t border-sand/10">
+      <div className="space-y-2 pt-4 border-t border-sand/10">
         <Link
           href="/settings"
           className={`focus-ring flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
@@ -70,15 +71,15 @@ export function Sidebar() {
           </button>
         )}
 
-        <div className="mt-3 rounded-lg border border-sand/10 px-3 py-2 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-gold-500" />
-          <div className="text-[11px] font-mono">
-            <div className="text-sand/60">Arc</div>
-            <div className="text-sand/40">
-              {account ? `${account.address.slice(0, 6)}…${account.address.slice(-4)}` : "Not connected"}
+        <NetworkSwitcher />
+
+        {account && (
+          <div className="rounded-lg border border-sand/10 px-3 py-2">
+            <div className="font-mono text-[11px] text-sand/40">
+              {account.address.slice(0, 6)}…{account.address.slice(-4)}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </aside>
   );

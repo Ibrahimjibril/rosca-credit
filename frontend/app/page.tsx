@@ -9,8 +9,8 @@ import { StatCard } from "@/components/StatCard";
 import { GroupCard } from "@/components/GroupCard";
 import { GroupStatsCollector, GroupStat } from "@/components/GroupStatsCollector";
 import { LandingPage } from "@/components/LandingPage";
-import { useGroupCount, useTokenBalance, roscaContract } from "@/lib/hooks";
-import { DEFAULT_TOKEN_ADDRESS } from "@/lib/contract";
+import { useGroupCount, useTokenBalance, useRoscaContract } from "@/lib/hooks";
+import { useNetwork } from "@/contexts/NetworkContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { client } from "@/lib/thirdwebClient";
 import { getGreeting } from "@/lib/greeting";
@@ -18,8 +18,10 @@ import { getGreeting } from "@/lib/greeting";
 export default function Home() {
   const account = useActiveAccount();
   const { t } = useLanguage();
+  const roscaContract = useRoscaContract();
+  const { tokenAddress } = useNetwork();
   const { data: groupCount } = useGroupCount();
-  const { data: walletBalance } = useTokenBalance(DEFAULT_TOKEN_ADDRESS, account?.address);
+  const { data: walletBalance } = useTokenBalance(tokenAddress, account?.address);
   const { data: profiles } = useProfiles({ client });
 
   const { mutate: sendTx, isPending: isClaiming } = useSendTransaction();

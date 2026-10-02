@@ -1,11 +1,14 @@
-// Fill this in after running `npm run deploy` in the contracts project.
-export const ROSCA_CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_ROSCA_CONTRACT_ADDRESS ||
+export const ROSCA_CONTRACT_ADDRESS_MAINNET = (process.env.NEXT_PUBLIC_ROSCA_CONTRACT_ADDRESS ||
   "0x0000000000000000000000000000000000000000") as `0x${string}`;
 
-// Default USDC token on Arc Mainnet — replace if you use a different
-// ERC20 for contributions. Members must approve() this token before contributing.
-export const DEFAULT_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_TOKEN_ADDRESS ||
+export const ROSCA_CONTRACT_ADDRESS_TESTNET = (process.env.NEXT_PUBLIC_ROSCA_CONTRACT_ADDRESS_TESTNET ||
   "0x0000000000000000000000000000000000000000") as `0x${string}`;
+
+export const DEFAULT_TOKEN_ADDRESS_MAINNET = (process.env.NEXT_PUBLIC_TOKEN_ADDRESS ||
+  "0x0000000000000000000000000000000000000000") as `0x${string}`;
+
+export const DEFAULT_TOKEN_ADDRESS_TESTNET = (process.env.NEXT_PUBLIC_TOKEN_ADDRESS_TESTNET ||
+  "0x3600000000000000000000000000000000000000") as `0x${string}`;
 
 export const ROSCA_ABI = [
   {

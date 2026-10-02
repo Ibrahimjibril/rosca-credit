@@ -6,18 +6,18 @@ import { prepareTransaction } from "thirdweb";
 import { useActiveAccount, useSendTransaction } from "thirdweb/react";
 import { formatUnits, toUnits } from "@/lib/units";
 import { useTokenBalance, useTokenSymbol } from "@/lib/hooks";
-import { DEFAULT_TOKEN_ADDRESS } from "@/lib/contract";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { client } from "@/lib/thirdwebClient";
-import { arcMainnet } from "@/lib/chain";
+import { useNetwork } from "@/contexts/NetworkContext";
 
 type Panel = "none" | "deposit" | "withdraw";
 
 export default function WalletPage() {
   const account = useActiveAccount();
   const { t } = useLanguage();
-  const { data: balance, refetch: refetchBalance } = useTokenBalance(DEFAULT_TOKEN_ADDRESS, account?.address);
-  const { data: symbol } = useTokenSymbol(DEFAULT_TOKEN_ADDRESS);
+  const { chain, tokenAddress } = useNetwork();
+  const { data: balance, refetch: refetchBalance } = useTokenBalance(tokenAddress, account?.address);
+  const { data: symbol } = useTokenSymbol(tokenAddress);
 
   const [panel, setPanel] = useState<Panel>("none");
   const [copied, setCopied] = useState(false);
@@ -39,9 +39,9 @@ export default function WalletPage() {
 
     const tx = prepareTransaction({
       to: recipient as `0x${string}`,
-      chain: arcMainnet,
+      chain,
       client,
-      value: toUnits(amount, 18), // native USDC uses 18 decimals on Arc
+      value: toUnits(amount, 18),
     });
 
     sendTx(tx, {

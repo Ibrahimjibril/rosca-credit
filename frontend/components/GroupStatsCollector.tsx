@@ -14,14 +14,6 @@ export type GroupStat = {
   decimals: number;
 };
 
-/** Renders nothing — just reads one group's on-chain data and reports it
- *  up to the parent via onData, so the dashboard can aggregate totals
- *  across every group the connected account belongs to.
- *
- *  Note: we report stake/reward whenever getStakeInfo returns a nonzero
- *  value, without gating on a separate membership-array fetch — that gate
- *  previously caused real stake balances to be silently dropped if the
- *  members-array read hadn't resolved yet or raced with other reads. */
 export function GroupStatsCollector({
   groupId,
   account,
