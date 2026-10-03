@@ -9,9 +9,6 @@ export const arcMainnet = defineChain({
     symbol: "USDC",
     decimals: 18,
   },
-  blockExplorers: [
-    { name: "Arc Explorer", url: "https://explorer.arc.io" },
-  ],
   testnet: false,
 });
 
@@ -24,8 +21,5 @@ export const arcTestnet = defineChain({
     symbol: "USDC",
     decimals: 18,
   },
-  blockExplorers: [
-    { name: "Arcscan", url: "https://testnet.arcscan.app" },
-  ],
   testnet: true,
 });
