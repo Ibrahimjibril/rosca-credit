@@ -3,7 +3,7 @@ import { defineChain } from "thirdweb/chains";
 export const arcMainnet = defineChain({
   id: 5042,
   name: "Arc",
-  rpc: "https://rpc.mainnet.arc.io",
+  rpc: ["https://rpc.mainnet.arc.io"],
   nativeCurrency: {
     name: "USD Coin",
     symbol: "USDC",
@@ -18,7 +18,7 @@ export const arcMainnet = defineChain({
 export const arcTestnet = defineChain({
   id: 5042002,
   name: "Arc Testnet",
-  rpc: "https://5042002.rpc.thirdweb.com",
+  rpc: ["https://5042002.rpc.thirdweb.com"],
   nativeCurrency: {
     name: "USD Coin",
     symbol: "USDC",
