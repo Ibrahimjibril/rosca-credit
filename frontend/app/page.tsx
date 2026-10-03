@@ -53,6 +53,8 @@ export default function Home() {
     .filter((g) => g.staked > 0n || g.pendingReward > 0n)
     .sort((a, b) => b.groupId - a.groupId);
 
+  const readyToClaimCount = claimableGroups.filter((g) => g.finished && g.shortfall === 0n).length;
+
   function handleClaim(groupId: number) {
     if (!account) return;
     setClaimingId(groupId);
@@ -81,19 +83,32 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Network switcher: visible here (not just the desktop sidebar) so it's
-          reachable on mobile too, and placed next to the wallet/account area. */}
-      <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-sand/10 bg-indigo-800/40 p-4">
+      <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-sand/10 bg-indigo-800/40 p-4">
         <div className="min-w-0">
           <div className="font-mono text-[11px] uppercase tracking-wide text-sand/40">Wallet</div>
           <div className="font-mono text-xs text-sand/60 mt-0.5">
             {account.address.slice(0, 8)}…{account.address.slice(-6)}
           </div>
         </div>
-        <div className="shrink-0 w-48">
+        <div className="shrink-0 w-52">
           <NetworkSwitcher />
         </div>
       </div>
+
+      {readyToClaimCount > 0 && (
+        <a
+          href="#your-stakes"
+          className="focus-ring mb-6 flex items-center justify-between gap-3 rounded-xl border-2 border-gold-500/50 bg-gold-500/10 px-4 py-3 hover:bg-gold-500/15 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg" aria-hidden>💰</span>
+            <span className="text-sm text-gold-400 font-medium">
+              {readyToClaimCount} stake{readyToClaimCount > 1 ? "s" : ""} ready to claim
+            </span>
+          </div>
+          <span className="text-xs font-mono font-bold uppercase tracking-wide text-gold-400">Claim now →</span>
+        </a>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard
@@ -148,7 +163,7 @@ export default function Home() {
           </div>
 
       {claimableGroups.length > 0 && (
-        <div className="mt-8">
+        <div id="your-stakes" className="mt-8 scroll-mt-20">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-mono text-xs tracking-[0.2em] uppercase text-sand/40">Your Stakes</h2>
           </div>
