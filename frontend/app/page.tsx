@@ -9,6 +9,7 @@ import { StatCard } from "@/components/StatCard";
 import { GroupCard } from "@/components/GroupCard";
 import { GroupStatsCollector, GroupStat } from "@/components/GroupStatsCollector";
 import { LandingPage } from "@/components/LandingPage";
+import { NetworkSwitcher } from "@/components/NetworkSwitcher";
 import { useGroupCount, useTokenBalance, useRoscaContract } from "@/lib/hooks";
 import { useNetwork } from "@/contexts/NetworkContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -71,12 +72,26 @@ export default function Home() {
         <GroupStatsCollector key={id} groupId={id} account={account.address} onData={handleData} />
       ))}
 
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="min-w-0">
           <h1 className="font-display font-bold text-2xl text-sand">
             {greeting} 👋
           </h1>
           <p className="text-sand/50 text-sm mt-1">Here's what's happening with your savings today.</p>
+        </div>
+      </div>
+
+      {/* Network switcher: visible here (not just the desktop sidebar) so it's
+          reachable on mobile too, and placed next to the wallet/account area. */}
+      <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-sand/10 bg-indigo-800/40 p-4">
+        <div className="min-w-0">
+          <div className="font-mono text-[11px] uppercase tracking-wide text-sand/40">Wallet</div>
+          <div className="font-mono text-xs text-sand/60 mt-0.5">
+            {account.address.slice(0, 8)}…{account.address.slice(-6)}
+          </div>
+        </div>
+        <div className="shrink-0 w-48">
+          <NetworkSwitcher />
         </div>
       </div>
 
