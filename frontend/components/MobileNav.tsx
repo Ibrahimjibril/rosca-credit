@@ -56,7 +56,7 @@ export function MobileNav() {
   const { t } = useLanguage();
 
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 border-t border-sand/10 bg-indigo-950/95 backdrop-blur px-2 py-2 flex justify-around z-30">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 border-t border-sand/10 bg-indigo-900/95 backdrop-blur px-2 py-2 flex justify-around z-30">
       {ITEMS.map((item) => {
         const active = pathname === item.href;
         const Icon = item.Icon;
@@ -65,7 +65,7 @@ export function MobileNav() {
             key={item.key}
             href={item.href}
             className={`flex flex-col items-center gap-1 px-3 py-1 text-[10px] font-mono ${
-              active ? "text-gold-400" : "text-sand/50"
+              active ? "text-gold-600" : "text-sand/70"
             }`}
           >
             <Icon />

@@ -25,18 +25,18 @@ export function NetworkSwitcher() {
     <div
       className={`rounded-xl border-2 p-3 transition-colors ${
         isMainnet
-          ? "border-gold-500/50 bg-gold-500/10"
-          : "border-orange-400/50 bg-orange-500/10"
+          ? "border-gold-600/60 bg-gold-500/20"
+          : "border-orange-500/60 bg-orange-500/15"
       }`}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span
             className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-              isMainnet ? "bg-gold-500" : "bg-orange-400 animate-pulse"
+              isMainnet ? "bg-gold-600" : "bg-orange-500 animate-pulse"
             }`}
           />
-          <span className={`text-xs font-mono font-semibold truncate ${isMainnet ? "text-gold-400" : "text-orange-300"}`}>
+          <span className={`text-xs font-mono font-bold truncate ${isMainnet ? "text-gold-600" : "text-orange-600"}`}>
             {isMainnet ? "Arc Mainnet" : "Arc Testnet"}
           </span>
         </div>
@@ -45,19 +45,19 @@ export function NetworkSwitcher() {
           className={`focus-ring shrink-0 rounded-full px-3 py-1 text-[11px] font-mono font-bold uppercase tracking-wide transition-colors ${
             isMainnet
               ? "bg-gold-500 text-indigo-950 hover:bg-gold-400"
-              : "bg-orange-400 text-indigo-950 hover:bg-orange-300"
+              : "bg-orange-500 text-indigo-950 hover:bg-orange-400"
           }`}
         >
           Switch
         </button>
       </div>
       {!isMainnet && (
-        <div className="text-[10px] text-orange-300/70 mt-1 font-mono">Using test funds — not real money</div>
+        <div className="text-[10px] text-orange-600/90 mt-1 font-mono font-medium">Using test funds — not real money</div>
       )}
 
       {confirming && (
-        <div className="mt-2 rounded-md border border-gold-500/30 bg-gold-500/5 p-2">
-          <p className="text-[11px] text-sand/70 leading-relaxed">
+        <div className="mt-2 rounded-md border border-gold-500/30 bg-gold-500/10 p-2">
+          <p className="text-[11px] text-sand/80 leading-relaxed">
             Switching to Mainnet uses real USDC. Continue?
           </p>
           <div className="flex gap-2 mt-2">
