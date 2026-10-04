@@ -85,7 +85,7 @@ export function useStakeInfo(groupId: number, member?: string) {
     contract,
     method: "getStakeInfo",
     params: [BigInt(groupId), (member ?? "0x0000000000000000000000000000000000000000") as `0x${string}`],
-    queryOptions: { enabled: !!member, ...POLL },
+    queryOptions: POLL,
   });
 }
 

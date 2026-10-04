@@ -34,7 +34,7 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
   const [payoutBps, rewardRateBps] = (stakingData as any) || [3000, 500, 0n];
 
   const { data: roundStatus, refetch: refetchRound } = useRoundStatus(groupId, currentRound !== undefined ? Number(currentRound) : 0);
-  const { data: stakeInfo, refetch: refetchStake, isLoading: stakeLoading, isError: stakeIsError, error: stakeError } = useStakeInfo(groupId, account?.address);
+  const { data: stakeInfo, refetch: refetchStake } = useStakeInfo(groupId, account?.address);
 
   const decimals = useTokenDecimals(token as `0x${string}`);
   const symbol = useTokenSymbol(token as `0x${string}`);
@@ -84,8 +84,6 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
     return <main className="max-w-2xl mx-auto px-5 md:px-8 py-10 text-sand/50">Loading...</main>;
   }
 
-  console.log("DEBUG stakeInfo raw:", stakeInfo);
-  console.log("DEBUG account:", account?.address);
 
   return (
     <main className="max-w-2xl mx-auto px-5 md:px-8 py-6">
@@ -107,13 +105,7 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
         >
           {linkCopied ? "Link copied ✓" : "🔗 Copy invite link to share"}
         </button>
-      )}
-
-      <div className="mt-4 rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-[10px] font-mono text-red-200 break-all">
-        DEBUG - account: {String(account?.address)} | isMember: {String(isMemberHere)} | loading: {String(stakeLoading)} | isError: {String(stakeIsError)} | error: {String(stakeError?.message)} | stakeInfo: {JSON.stringify(stakeInfo, (k, v) => typeof v === "bigint" ? v.toString() : v)}
-      </div>
-
-      <section className="mt-8 flex justify-center">
+      )}      <section className="mt-8 flex justify-center">
         <RotationWheel members={wheelMembers} currentRound={Number(currentRound ?? 0)} finished={!!finished} />
       </section>
 
