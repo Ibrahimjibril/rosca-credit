@@ -84,6 +84,9 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
     return <main className="max-w-2xl mx-auto px-5 md:px-8 py-10 text-sand/50">Loading...</main>;
   }
 
+  console.log("DEBUG stakeInfo raw:", stakeInfo);
+  console.log("DEBUG account:", account?.address);
+
   return (
     <main className="max-w-2xl mx-auto px-5 md:px-8 py-6">
       <p className="font-mono text-xs tracking-[0.2em] uppercase text-gold-500">
@@ -105,6 +108,10 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
           {linkCopied ? "Link copied ✓" : "🔗 Copy invite link to share"}
         </button>
       )}
+
+      <div className="mt-4 rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-[10px] font-mono text-red-200 break-all">
+        DEBUG - account: {String(account?.address)} | isMember: {String(isMemberHere)} | stakeInfo: {JSON.stringify(stakeInfo, (k, v) => typeof v === "bigint" ? v.toString() : v)}
+      </div>
 
       <section className="mt-8 flex justify-center">
         <RotationWheel members={wheelMembers} currentRound={Number(currentRound ?? 0)} finished={!!finished} />
