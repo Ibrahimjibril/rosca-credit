@@ -29,6 +29,7 @@ const TESTNET_TOKEN = (process.env.NEXT_PUBLIC_TOKEN_ADDRESS_TESTNET ||
 
 export function NetworkProvider({ children }: { children: React.ReactNode }) {
   const [network, setNetworkState] = useState<RoscaNetwork>("mainnet");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     try {
@@ -37,6 +38,7 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // ignore — defaults to mainnet
     }
+    setReady(true);
   }, []);
 
   function setNetwork(n: RoscaNetwork) {
@@ -69,6 +71,8 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [network]);
+
+  if (!ready) return null;
 
   return <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>;
 }

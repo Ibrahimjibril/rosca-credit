@@ -1,8 +1,8 @@
 "use client";
 
-import { getContract, readContract } from "thirdweb";
+import { getContract } from "thirdweb";
 import { useReadContract } from "thirdweb/react";
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo } from "react";
 import { client } from "@/lib/thirdwebClient";
 import { useNetwork } from "@/contexts/NetworkContext";
 import { ROSCA_ABI, ERC20_ABI } from "@/lib/contract";
@@ -81,29 +81,12 @@ export function useRoundStatus(groupId: number, round: number) {
 
 export function useStakeInfo(groupId: number, member?: string) {
   const contract = useRoscaContract();
-  const [data, setData] = useState<readonly [bigint, bigint, bigint] | undefined>(undefined);
-
-  const fetchData = useCallback(async () => {
-    if (!member) return;
-    try {
-      const result = await readContract({
-        contract,
-        method: "getStakeInfo",
-        params: [BigInt(groupId), member as `0x${string}`],
-      });
-      setData(result as any);
-    } catch {
-      // leave previous data in place; next poll retries
-    }
-  }, [contract, groupId, member]);
-
-  useEffect(() => {
-    fetchData();
-    const id = setInterval(fetchData, 8000);
-    return () => clearInterval(id);
-  }, [fetchData]);
-
-  return { data, refetch: fetchData };
+  return useReadContract({
+    contract,
+    method: "getStakeInfo",
+    params: [BigInt(groupId), (member ?? "0x0000000000000000000000000000000000000000") as `0x${string}`],
+    queryOptions: { enabled: !!member, ...POLL },
+  });
 }
 
 export function useTokenDecimals(token: `0x${string}`) {
