@@ -34,7 +34,7 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
   const [payoutBps, rewardRateBps] = (stakingData as any) || [3000, 500, 0n];
 
   const { data: roundStatus, refetch: refetchRound } = useRoundStatus(groupId, currentRound !== undefined ? Number(currentRound) : 0);
-  const { data: stakeInfo, refetch: refetchStake } = useStakeInfo(groupId, account?.address);
+  const { data: stakeInfo, refetch: refetchStake, isLoading: skLoading, isError: skIsError, error: skError } = useStakeInfo(groupId, account?.address);
 
   const decimals = useTokenDecimals(token as `0x${string}`);
   const symbol = useTokenSymbol(token as `0x${string}`);
@@ -105,7 +105,11 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
         >
           {linkCopied ? "Link copied ✓" : "🔗 Copy invite link to share"}
         </button>
-      )}      <section className="mt-8 flex justify-center">
+      )}      <div className="mt-4 rounded-lg border border-red-400/60 bg-red-500/20 p-3 text-[10px] font-mono text-red-100 break-all">
+        DEBUG2 - loading: {String(skLoading)} | isError: {String(skIsError)} | errorMsg: {String(skError?.message ?? "none")} | errorName: {String((skError as any)?.name ?? "none")}
+      </div>
+
+      <section className="mt-8 flex justify-center">
         <RotationWheel members={wheelMembers} currentRound={Number(currentRound ?? 0)} finished={!!finished} />
       </section>
 
