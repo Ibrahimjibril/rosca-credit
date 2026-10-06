@@ -105,11 +105,7 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
         >
           {linkCopied ? "Link copied ✓" : "🔗 Copy invite link to share"}
         </button>
-      )}      <div className="mt-4 rounded-lg border border-red-400/60 bg-red-500/20 p-3 text-[10px] font-mono text-red-100 break-all">
-        DEBUG2 - loading: {String(skLoading)} | isError: {String(skIsError)} | errorMsg: {String(skError?.message ?? "none")} | errorName: {String((skError as any)?.name ?? "none")}
-      </div>
-
-      <section className="mt-8 flex justify-center">
+      )}            <section className="mt-8 flex justify-center">
         <RotationWheel members={wheelMembers} currentRound={Number(currentRound ?? 0)} finished={!!finished} />
       </section>
 
