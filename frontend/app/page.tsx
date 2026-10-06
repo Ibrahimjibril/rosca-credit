@@ -10,6 +10,7 @@ import { GroupCard } from "@/components/GroupCard";
 import { GroupStatsCollector, GroupStat } from "@/components/GroupStatsCollector";
 import { LandingPage } from "@/components/LandingPage";
 import { NetworkSwitcher } from "@/components/NetworkSwitcher";
+import { ClaimSuccessModal } from "@/components/ClaimSuccessModal";
 import { useGroupCount, useTokenBalance, useRoscaContract } from "@/lib/hooks";
 import { useNetwork } from "@/contexts/NetworkContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -27,6 +28,7 @@ export default function Home() {
 
   const { mutate: sendTx, isPending: isClaiming } = useSendTransaction();
   const [claimingId, setClaimingId] = useState<number | null>(null);
+  const [successAmount, setSuccessAmount] = useState<string | null>(null);
 
   const googleProfile = profiles?.find((p: any) => p.type === "google") as any;
   const displayName =
@@ -55,12 +57,17 @@ export default function Home() {
 
   const readyToClaimCount = claimableGroups.filter((g) => g.finished && g.shortfall === 0n).length;
 
-  function handleClaim(groupId: number) {
+  function handleClaim(groupId: number, amount: bigint, decimals: number) {
     if (!account) return;
     setClaimingId(groupId);
     sendTx(
       prepareContractCall({ contract: roscaContract, method: "claimStake", params: [BigInt(groupId)] }) as any,
-      { onSettled: () => setClaimingId(null) }
+      {
+        onSuccess: () => {
+          setSuccessAmount(formatUnits(amount, decimals));
+        },
+        onSettled: () => setClaimingId(null),
+      }
     );
   }
 
@@ -70,6 +77,10 @@ export default function Home() {
 
   return (
     <main className="max-w-5xl mx-auto px-5 md:px-8 py-6">
+      {successAmount && (
+        <ClaimSuccessModal amount={successAmount} symbol="USDC" onClose={() => setSuccessAmount(null)} />
+      )}
+
       {account && allIds.map((id) => (
         <GroupStatsCollector key={id} groupId={id} account={account.address} onData={handleData} />
       ))}
@@ -122,6 +133,7 @@ export default function Home() {
               value={`${formatUnits(totalStaked, 6)} USDC`}
             sub={totalStaked > 0n ? "Across all groups" : "Earned after your payout turn"}
               accent="teal"
+              claimHref={totalStaked > 0n ? "#your-stakes" : undefined}
             />
             <StatCard
               icon="👥"
@@ -135,6 +147,7 @@ export default function Home() {
               value={`${formatUnits(totalReward, 6)} USDC`}
               sub="Pending, claimable at finish"
               accent="teal"
+              claimHref={totalReward > 0n ? "#your-stakes" : undefined}
             />
           </div>
 
@@ -206,14 +219,17 @@ export default function Home() {
                     </Link>
                   ) : (
                     <button
-                      onClick={() => handleClaim(g.groupId)}
+                      onClick={() => handleClaim(g.groupId, amount, g.decimals)}
                       disabled={!readyToClaim || isThisPending}
-                      className={`focus-ring shrink-0 rounded-full text-sm font-medium px-5 py-2.5 transition-colors ${
+                      className={`focus-ring shrink-0 flex items-center gap-2 rounded-full text-sm font-medium px-5 py-2.5 transition-colors ${
                         readyToClaim
                           ? "bg-gold-500 text-indigo-950 hover:bg-gold-400"
                           : "bg-transparent border border-sand/15 text-sand/30 cursor-not-allowed"
                       }`}
                     >
+                      {isThisPending && (
+                        <span className="w-3.5 h-3.5 rounded-full border-2 border-indigo-950/40 border-t-indigo-950 animate-spin" />
+                      )}
                       {isThisPending ? "Claiming..." : readyToClaim ? "Claim" : "Locked"}
                     </button>
                   )}

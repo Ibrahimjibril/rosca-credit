@@ -7,12 +7,14 @@ import { useActiveAccount, useSendTransaction, useReadContract } from "thirdweb/
 import { RotationWheel } from "@/components/RotationWheel";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { useRoscaContract, useTokenContract, useGroup, useGroupStaking, useGroupName, useMembers, useRoundStatus, useStakeInfo, useTokenDecimals, useTokenSymbol } from "@/lib/hooks";
+import { ClaimSuccessModal } from "@/components/ClaimSuccessModal";
 
 export default function GroupDetail({ params }: { params: { id: string } }) {
   const groupId = Number(params.id);
   const account = useActiveAccount();
   const roscaContract = useRoscaContract();
   const [linkCopied, setLinkCopied] = useState(false);
+  const [successAmount, setSuccessAmount] = useState<string | null>(null);
   const { data: groupName } = useGroupName(groupId);
 
   function handleShareLink() {
@@ -87,6 +89,9 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
 
   return (
     <main className="max-w-2xl mx-auto px-5 md:px-8 py-6">
+      {successAmount && (
+        <ClaimSuccessModal amount={successAmount} symbol={symbol.data ?? "USDC"} onClose={() => setSuccessAmount(null)} />
+      )}
       <p className="font-mono text-xs tracking-[0.2em] uppercase text-gold-500">
         {groupName && groupName !== "" ? groupName : `Group #${groupId}`}
       </p>
@@ -216,7 +221,18 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
           {finished && isMemberHere && shortfall === 0n && (stakedPrincipal > 0n || pendingReward > 0n) && (
             <ActionButton
               disabled={isPending}
-              onClick={() => sendTx(prepareContractCall({ contract: roscaContract, method: "claimStake", params: [BigInt(groupId)] }) as any, { onSuccess: refetchAll })}
+              onClick={() => {
+                const claimedAmount = formatUnits(stakedPrincipal + pendingReward, dec);
+                sendTx(
+                  prepareContractCall({ contract: roscaContract, method: "claimStake", params: [BigInt(groupId)] }) as any,
+                  {
+                    onSuccess: () => {
+                      setSuccessAmount(claimedAmount);
+                      refetchAll();
+                    },
+                  }
+                );
+              }}
             >
               Claim stake + reward
             </ActionButton>
