@@ -74,6 +74,8 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
 
   if (!ready) return null;
 
+  if (!ready) return null;
+
   return <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>;
 }
 
