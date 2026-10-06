@@ -79,14 +79,54 @@ export function useRoundStatus(groupId: number, round: number) {
   });
 }
 
+// The pre-existing testnet contract was deployed from an earlier version of
+// RoscaCredit.sol whose getStakeInfo only returns (principal, pendingReward) —
+// it predates the "shortfall" tracking field. The current (mainnet) contract
+// returns all three. We detect which network we're on and decode accordingly,
+// so old testnet data still displays correctly instead of throwing a decode error.
+const LEGACY_GET_STAKE_INFO_ABI = [
+  {
+    type: "function",
+    name: "getStakeInfo",
+    stateMutability: "view",
+    inputs: [
+      { name: "groupId", type: "uint256" },
+      { name: "member", type: "address" },
+    ],
+    outputs: [
+      { name: "principal", type: "uint256" },
+      { name: "pendingReward", type: "uint256" },
+    ],
+  },
+] as const;
+
 export function useStakeInfo(groupId: number, member?: string) {
-  const contract = useRoscaContract();
-  return useReadContract({
+  const { network, chain, roscaAddress } = useNetwork();
+  const fullContract = useRoscaContract();
+  const legacyContract = useMemo(
+    () => getContract({ client, chain, address: roscaAddress, abi: LEGACY_GET_STAKE_INFO_ABI as any }),
+    [chain, roscaAddress]
+  );
+
+  const contract = network === "testnet" ? legacyContract : fullContract;
+
+  const result = useReadContract({
     contract,
     method: "getStakeInfo",
     params: [BigInt(groupId), (member ?? "0x0000000000000000000000000000000000000000") as `0x${string}`],
     queryOptions: { enabled: !!member, ...POLL },
   });
+
+  const data = useMemo(() => {
+    if (!result.data) return undefined;
+    if (network === "testnet") {
+      const [principal, pendingReward] = result.data as unknown as readonly [bigint, bigint];
+      return [principal, pendingReward, 0n] as const;
+    }
+    return result.data as unknown as readonly [bigint, bigint, bigint];
+  }, [result.data, network]);
+
+  return { ...result, data };
 }
 
 export function useTokenDecimals(token: `0x${string}`) {

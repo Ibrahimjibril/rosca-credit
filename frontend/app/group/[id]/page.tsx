@@ -34,7 +34,7 @@ export default function GroupDetail({ params }: { params: { id: string } }) {
   const [payoutBps, rewardRateBps] = (stakingData as any) || [3000, 500, 0n];
 
   const { data: roundStatus, refetch: refetchRound } = useRoundStatus(groupId, currentRound !== undefined ? Number(currentRound) : 0);
-  const { data: stakeInfo, refetch: refetchStake, isLoading: skLoading, isError: skIsError, error: skError } = useStakeInfo(groupId, account?.address);
+  const { data: stakeInfo, refetch: refetchStake } = useStakeInfo(groupId, account?.address);
 
   const decimals = useTokenDecimals(token as `0x${string}`);
   const symbol = useTokenSymbol(token as `0x${string}`);
