@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useActiveAccount, useContractEvents } from "thirdweb/react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { getContractEvents } from "thirdweb";
+import { useActiveAccount } from "thirdweb/react";
 import { formatUnits } from "@/lib/units";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRoscaContract } from "@/lib/hooks";
@@ -28,12 +29,42 @@ export default function ActivityPage() {
   const roscaContract = useRoscaContract();
   const { explorerUrl } = useNetwork();
 
-  const { data: contributed, isLoading: l1 } = useContractEvents({ contract: roscaContract, events: [contributedEvent] });
-  const { data: missed, isLoading: l2 } = useContractEvents({ contract: roscaContract, events: [missedContributionEvent] });
-  const { data: settled, isLoading: l3 } = useContractEvents({ contract: roscaContract, events: [roundSettledEvent] });
-  const { data: claimed, isLoading: l4 } = useContractEvents({ contract: roscaContract, events: [stakeClaimedEvent] });
+  // Direct on-chain event fetching via RPC logs — bypasses thirdweb's
+  // Insight indexing service, which doesn't yet support this custom chain
+  // and was silently failing (so useContractEvents never returned data).
+  const [contributed, setContributed] = useState<any[]>([]);
+  const [missed, setMissed] = useState<any[]>([]);
+  const [settled, setSettled] = useState<any[]>([]);
+  const [claimed, setClaimed] = useState<any[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
 
-  const eventsLoading = l1 || l2 || l3 || l4;
+  const fetchAllEvents = useCallback(async () => {
+    try {
+      const [c, m, s, cl] = await Promise.all([
+        getContractEvents({ contract: roscaContract, events: [contributedEvent], fromBlock: 0n }),
+        getContractEvents({ contract: roscaContract, events: [missedContributionEvent], fromBlock: 0n }),
+        getContractEvents({ contract: roscaContract, events: [roundSettledEvent], fromBlock: 0n }),
+        getContractEvents({ contract: roscaContract, events: [stakeClaimedEvent], fromBlock: 0n }),
+      ]);
+      setContributed(c);
+      setMissed(m);
+      setSettled(s);
+      setClaimed(cl);
+      setEventsError(null);
+    } catch (err: any) {
+      setEventsError(err?.message ?? "Failed to load on-chain activity");
+    } finally {
+      setEventsLoading(false);
+    }
+  }, [roscaContract]);
+
+  useEffect(() => {
+    setEventsLoading(true);
+    fetchAllEvents();
+    const id = setInterval(fetchAllEvents, 10000);
+    return () => clearInterval(id);
+  }, [fetchAllEvents]);
 
   const [transfers, setTransfers] = useState<FeedItem[]>([]);
   const [transfersLoading, setTransfersLoading] = useState(false);
@@ -96,10 +127,10 @@ export default function ActivityPage() {
     const me = account.address.toLowerCase();
     const items: FeedItem[] = [...transfers];
 
-    (contributed ?? []).forEach((e: any) => {
+    contributed.forEach((e: any) => {
       if (e.args?.member?.toLowerCase() !== me) return;
       items.push({
-        key: `contrib-${e.transactionHash}`,
+        key: `contrib-${e.transactionHash}-${e.logIndex ?? 0}`,
         blockNumber: e.blockNumber,
         icon: "💸",
         title: `You contributed to Group #${e.args.groupId}`,
@@ -108,10 +139,10 @@ export default function ActivityPage() {
       });
     });
 
-    (settled ?? []).forEach((e: any) => {
+    settled.forEach((e: any) => {
       if (e.args?.recipient?.toLowerCase() !== me) return;
       items.push({
-        key: `settled-${e.transactionHash}`,
+        key: `settled-${e.transactionHash}-${e.logIndex ?? 0}`,
         blockNumber: e.blockNumber,
         icon: "🎉",
         title: `You received a payout from Group #${e.args.groupId}`,
@@ -120,10 +151,10 @@ export default function ActivityPage() {
       });
     });
 
-    (claimed ?? []).forEach((e: any) => {
+    claimed.forEach((e: any) => {
       if (e.args?.member?.toLowerCase() !== me) return;
       items.push({
-        key: `claim-${e.transactionHash}`,
+        key: `claim-${e.transactionHash}-${e.logIndex ?? 0}`,
         blockNumber: e.blockNumber,
         icon: "🏆",
         title: `You claimed your stake from Group #${e.args.groupId}`,
@@ -132,10 +163,10 @@ export default function ActivityPage() {
       });
     });
 
-    (missed ?? []).forEach((e: any) => {
+    missed.forEach((e: any) => {
       if (e.args?.member?.toLowerCase() !== me) return;
       items.push({
-        key: `missed-${e.transactionHash}`,
+        key: `missed-${e.transactionHash}-${e.logIndex ?? 0}`,
         blockNumber: e.blockNumber,
         icon: "⚠️",
         title: `Missed contribution auto-covered from your stake — Group #${e.args.groupId}`,
@@ -188,6 +219,10 @@ export default function ActivityPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {eventsError && (
+        <p className="text-center text-[11px] text-red-300/80 mt-3 font-mono">{eventsError}</p>
       )}
 
       {account && (
