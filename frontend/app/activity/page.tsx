@@ -28,12 +28,15 @@ export default function ActivityPage() {
   const roscaContract = useRoscaContract();
   const { explorerUrl } = useNetwork();
 
-  const { data: contributed } = useContractEvents({ contract: roscaContract, events: [contributedEvent] });
-  const { data: missed } = useContractEvents({ contract: roscaContract, events: [missedContributionEvent] });
-  const { data: settled } = useContractEvents({ contract: roscaContract, events: [roundSettledEvent] });
-  const { data: claimed } = useContractEvents({ contract: roscaContract, events: [stakeClaimedEvent] });
+  const { data: contributed, isLoading: l1 } = useContractEvents({ contract: roscaContract, events: [contributedEvent] });
+  const { data: missed, isLoading: l2 } = useContractEvents({ contract: roscaContract, events: [missedContributionEvent] });
+  const { data: settled, isLoading: l3 } = useContractEvents({ contract: roscaContract, events: [roundSettledEvent] });
+  const { data: claimed, isLoading: l4 } = useContractEvents({ contract: roscaContract, events: [stakeClaimedEvent] });
+
+  const eventsLoading = l1 || l2 || l3 || l4;
 
   const [transfers, setTransfers] = useState<FeedItem[]>([]);
+  const [transfersLoading, setTransfersLoading] = useState(false);
 
   useEffect(() => {
     if (!account) {
@@ -41,13 +44,17 @@ export default function ActivityPage() {
       return;
     }
     let cancelled = false;
+    setTransfersLoading(true);
 
     (async () => {
       try {
         const res = await fetch(
           `${explorerUrl}/api/v2/addresses/${account.address}/transactions`
         );
-        if (!res.ok) return;
+        if (!res.ok) {
+          if (!cancelled) setTransfersLoading(false);
+          return;
+        }
         const json = await res.json();
         const items: FeedItem[] = (json?.items ?? [])
           .map((tx: any): FeedItem | null => {
@@ -70,9 +77,12 @@ export default function ActivityPage() {
             }
           })
           .filter(Boolean) as FeedItem[];
-        if (!cancelled) setTransfers(items);
+        if (!cancelled) {
+          setTransfers(items);
+          setTransfersLoading(false);
+        }
       } catch {
-        // silently ignore — the explorer link below still covers this
+        if (!cancelled) setTransfersLoading(false);
       }
     })();
 
@@ -137,6 +147,8 @@ export default function ActivityPage() {
     return items.sort((a, b) => (b.blockNumber > a.blockNumber ? 1 : -1));
   }, [account, transfers, contributed, missed, settled, claimed]);
 
+  const isLoading = eventsLoading || transfersLoading;
+
   return (
     <main className="max-w-lg mx-auto px-5 md:px-8 py-6">
       <h1 className="font-display font-bold text-2xl text-sand mb-6">{t("activity")}</h1>
@@ -144,6 +156,12 @@ export default function ActivityPage() {
       {!account ? (
         <div className="rounded-xl border border-dashed border-sand/15 p-10 text-center text-sand/50">
           Sign in with Google to see your activity.
+        </div>
+      ) : isLoading && feed.length === 0 ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl border border-sand/10 bg-indigo-800/40 p-4 h-16 animate-pulse" />
+          ))}
         </div>
       ) : feed.length === 0 ? (
         <div className="rounded-xl border border-dashed border-sand/15 p-10 text-center text-sand/50 text-sm">
